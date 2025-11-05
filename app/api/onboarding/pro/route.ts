@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { users, pros, proDocuments, serviceCategories, proCategories } from "@/drizzle/schema";import { eq, inArray } from "drizzle-orm";
+import { users, pros, proDocuments, serviceCategories, proCategories } from "@/drizzle/schema";
+import { eq, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -28,6 +29,15 @@ export async function POST(req: Request) {
     // Verificar que el usuario autenticado sea el mismo
     if (userId !== clerkId) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    // Validar que las URLs de documentos existan
+    if (!documents?.cedulaFront || !documents?.cedulaBack || !documents?.antecedentes) {
+      console.error("Documentos recibidos:", documents);
+      return NextResponse.json(
+        { error: "Faltan URLs de documentos" },
+        { status: 400 }
+      );
     }
 
     // Crear usuario en tabla users
@@ -89,7 +99,7 @@ export async function POST(req: Request) {
       }),
     ];
 
-        await Promise.all(docPromises);
+    await Promise.all(docPromises);
 
     // Guardar categorías seleccionadas
     const categoryInserts = categoryIds.map((catId) => ({
@@ -102,3 +112,11 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true, userId: user.id, proId: pro.id });
+  } catch (error) {
+    console.error("Error en onboarding pro:", error);
+    return NextResponse.json(
+      { error: "Error al crear perfil" },
+      { status: 500 }
+    );
+  }
+}
