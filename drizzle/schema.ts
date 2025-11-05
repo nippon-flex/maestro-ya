@@ -154,3 +154,11 @@ export const notifications = pgTable('notifications', {
   readAt: timestamp('read_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const proCategories = pgTable('pro_categories', {
+  proId: integer('pro_id').notNull().references(() => pros.id, { onDelete: 'cascade' }),
+  categoryId: integer('category_id').notNull().references(() => serviceCategories.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.proId, t.categoryId] }),
+}));

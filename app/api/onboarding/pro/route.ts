@@ -1,7 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { users, pros, proDocuments, serviceCategories } from "@/drizzle/schema";
-import { eq, inArray } from "drizzle-orm";
+import { users, pros, proDocuments, serviceCategories, proCategories } from "@/drizzle/schema";import { eq, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -90,17 +89,16 @@ export async function POST(req: Request) {
       }),
     ];
 
-    await Promise.all(docPromises);
+        await Promise.all(docPromises);
 
-    // Nota: Las categorías las manejaremos después con una tabla intermedia
-    // Por ahora el maestro queda registrado
+    // Guardar categorías seleccionadas
+    const categoryInserts = categoryIds.map((catId) => ({
+      proId: pro.id,
+      categoryId: catId,
+    }));
+
+    if (categoryInserts.length > 0) {
+      await db.insert(proCategories).values(categoryInserts);
+    }
 
     return NextResponse.json({ success: true, userId: user.id, proId: pro.id });
-  } catch (error) {
-    console.error("Error en onboarding pro:", error);
-    return NextResponse.json(
-      { error: "Error al crear perfil" },
-      { status: 500 }
-    );
-  }
-}
