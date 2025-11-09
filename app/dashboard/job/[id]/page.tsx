@@ -55,14 +55,17 @@ export default async function JobPage({
   }
 
   // Obtener nombre del maestro
-  const [proUser] = await db
+  let proUser = null;
+if (job.proUserId) {
+  const result = await db
     .select()
     .from(users)
     .where(eq(users.id, job.proUserId))
     .limit(1);
+  proUser = result[0];
+}
 
-  const priceUSD = (job.quoteAmountCents / 100).toFixed(2);
-
+const priceUSD = ((job.quoteAmountCents || 0) / 100).toFixed(2);
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
