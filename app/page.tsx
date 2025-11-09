@@ -1,466 +1,337 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import Link from 'next/link';
 import { 
-  Hammer, 
-  Wrench, 
-  Zap, 
-  Paintbrush, 
-  Scissors, 
-  Sparkles, 
-  Leaf, 
-  Key,
-  CheckCircle2,
-  Shield,
-  Star,
-  Clock,
-  MapPin,
-  DollarSign,
-  Users,
-  AlertCircle,
-  TrendingUp,
-  Award,
-  Phone,
-  MessageCircle,
-  BadgeCheck,
-  XCircle
-} from "lucide-react";
+  Zap, Shield, Clock, Star, Award, Sparkles,
+  Wrench, Paintbrush, Hammer, Droplets, Lightbulb, Plug,
+  ArrowRight, CheckCircle2, Users, TrendingUp, CircuitBoard, Boxes
+} from 'lucide-react';
 
-export default function LandingPage() {
-  const categories = [
-    { name: "Albañilería", icon: Hammer, slug: "albanileria", color: "bg-orange-50 hover:bg-orange-100" },
-    { name: "Plomería", icon: Wrench, slug: "plomeria", color: "bg-blue-50 hover:bg-blue-100" },
-    { name: "Electricidad", icon: Zap, slug: "electricidad", color: "bg-yellow-50 hover:bg-yellow-100" },
-    { name: "Pintura", icon: Paintbrush, slug: "pintura", color: "bg-purple-50 hover:bg-purple-100" },
-    { name: "Carpintería", icon: Scissors, slug: "carpinteria", color: "bg-amber-50 hover:bg-amber-100" },
-    { name: "Limpieza", icon: Sparkles, slug: "limpieza", color: "bg-cyan-50 hover:bg-cyan-100" },
-    { name: "Jardinería", icon: Leaf, slug: "jardineria", color: "bg-green-50 hover:bg-green-100" },
-    { name: "Cerrajería", icon: Key, slug: "cerrajeria", color: "bg-gray-50 hover:bg-gray-100" },
-  ];
-
-  const problems = [
-    {
-      icon: XCircle,
-      title: "El maestro nunca llegó",
-      description: "Quedó en venir el lunes... y sigues esperando."
-    },
-    {
-      icon: DollarSign,
-      title: "Te cobraron el doble",
-      description: "No sabías el precio real y terminaste pagando de más."
-    },
-    {
-      icon: AlertCircle,
-      title: "Trabajo mal hecho",
-      description: "A las 2 semanas ya hay filtraciones o fallas."
-    },
-    {
-      icon: Phone,
-      title: "No contesta después",
-      description: "Una vez que cobró, desapareció del mapa."
-    }
-  ];
-
-  const testimonials = [
-    {
-      name: "María González",
-      location: "Quito Norte",
-      service: "Plomería",
-      rating: 5,
-      text: "Tenía una fuga urgente un domingo. Publiqué la solicitud y en 20 minutos tenía 3 cotizaciones. El maestro llegó en 2 horas y resolvió todo. ¡Increíble!",
-      avatar: "MG",
-      price: "$45"
-    },
-    {
-      name: "Carlos Méndez",
-      location: "Valle de los Chillos",
-      service: "Electricidad",
-      rating: 5,
-      text: "Comparé 5 ofertas para instalar luces LED. Ahorré $120 vs. lo que me cotizaron antes. El trabajo quedó perfecto y con garantía.",
-      avatar: "CM",
-      price: "$280"
-    },
-    {
-      name: "Andrea Ruiz",
-      location: "Cumbayá",
-      service: "Pintura",
-      rating: 5,
-      text: "Necesitaba pintar mi casa antes de mudarme. Los maestros se peleaban por el trabajo (en el buen sentido 😄). Elegí al mejor calificado y quedé fascinada.",
-      avatar: "AR",
-      price: "$650"
-    }
-  ];
-
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white">
-      
-      {/* Hero Section - Ataca el DOLOR */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-red-600 via-red-700 to-red-900 text-white">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
-          <div className="text-center">
-            
-            <div className="inline-flex items-center gap-2 bg-yellow-400 text-red-900 rounded-full px-5 py-2.5 mb-8 font-bold shadow-lg">
-              <AlertCircle className="w-5 h-5" />
-              <span className="text-sm">¿CANSADO DE MAESTROS QUE NO LLEGAN?</span>
-            </div>
-            
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
-              Ya No Más Maestros<br />
-              <span className="text-yellow-300">Que Te Dejan Plantado</span>
-            </h1>
-            
-            <p className="text-xl sm:text-2xl text-red-100 mb-4 max-w-3xl mx-auto leading-relaxed">
-              Encuentra maestros <span className="font-bold underline">verificados y cercanos</span> en minutos.
-            </p>
-            <p className="text-lg sm:text-xl text-red-200 mb-10 max-w-3xl mx-auto">
-              Recibe hasta <span className="font-bold text-yellow-300">5 cotizaciones</span>, compara precios, 
-              elige al mejor y <span className="font-bold">ahorra hasta 40%</span>. Con garantía de 30 días.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-              <Link href="/sign-up">
-                <Button size="lg" className="text-xl px-12 py-8 bg-yellow-400 text-red-900 hover:bg-yellow-300 shadow-2xl hover:shadow-3xl transition-all transform hover:scale-105 font-bold">
-                  <Users className="w-6 h-6 mr-2" />
-                  Publicar Mi Solicitud GRATIS
-                </Button>
-              </Link>
-              <Link href="/sign-up">
-<Button size="lg" className="text-xl px-12 py-8 bg-white/10 backdrop-blur-sm border-2 border-white text-white hover:bg-white hover:text-red-700 shadow-2xl transition-all font-bold">                  Soy Maestro - Quiero Trabajos
-                </Button>
-              </Link>
-            </div>
+    <div className="min-h-screen bg-black overflow-hidden">
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-black to-cyan-900">
+          <div className="absolute inset-0 opacity-30">
+            <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+            <div className="absolute top-0 -right-4 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+          </div>
+        </div>
 
-            {/* Proof */}
-            <div className="flex flex-wrap justify-center gap-8 text-sm text-red-100">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-300" />
-                <span>100% Gratis para clientes</span>
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.05)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000,transparent)]"></div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center z-10">
+          {/* Badge Animado */}
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 backdrop-blur-xl border border-purple-500/30 rounded-full px-6 py-3 mb-8 animate-slide-down shadow-[0_0_30px_rgba(168,85,247,0.4)]">
+            <Sparkles className="w-5 h-5 text-yellow-400 animate-pulse" />
+            <span className="text-white text-sm font-bold bg-gradient-to-r from-purple-300 to-cyan-300 bg-clip-text text-transparent">
+              +500 maestros verificados • Respuesta en 15min
+            </span>
+            <Zap className="w-5 h-5 text-cyan-400 animate-bounce-slow" />
+          </div>
+
+          {/* Main Heading con efecto neón */}
+          <h1 className="text-6xl md:text-8xl font-black text-white mb-8 leading-tight animate-slide-up">
+            Maestros a tu
+            <br />
+            <span className="relative inline-block">
+              <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 text-transparent bg-clip-text animate-gradient bg-[length:200%_200%]">
+                puerta
+              </span>
+              <span className="absolute -inset-1 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 blur-2xl opacity-50 animate-pulse-slow"></span>
+            </span>
+            <br />
+            <span className="text-5xl md:text-7xl bg-gradient-to-r from-white via-gray-200 to-white bg-clip-text text-transparent">
+              en minutos ⚡
+            </span>
+          </h1>
+
+          <p className="text-xl md:text-3xl text-gray-300 mb-12 max-w-4xl mx-auto font-light animate-slide-up animation-delay-200">
+            <span className="font-bold text-white">Como Uber</span>, pero para arreglar tu casa. 
+            <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent font-bold"> Compara precios</span> y 
+            <span className="bg-gradient-to-r from-pink-400 to-orange-400 bg-clip-text text-transparent font-bold"> elige al mejor</span>.
+          </p>
+
+          {/* CTA Buttons Mejorados */}
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16 animate-slide-up animation-delay-400">
+            <Link 
+              href="/sign-up"
+              className="group relative w-full sm:w-auto"
+            >
+              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full blur-lg opacity-75 group-hover:opacity-100 transition duration-300 animate-pulse-slow"></div>
+              <div className="relative px-10 py-5 bg-gradient-to-r from-cyan-500 via-purple-600 to-pink-600 text-white font-black text-xl rounded-full shadow-2xl hover:shadow-cyan-500/50 transition-all duration-300 hover:scale-110">
+                <span className="flex items-center justify-center gap-3">
+                  Solicitar Servicio GRATIS
+                  <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+                </span>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-300" />
-                <span>Sin permanencia</span>
+            </Link>
+
+            <Link 
+              href="/sign-up"
+              className="group w-full sm:w-auto px-10 py-5 bg-white/5 backdrop-blur-xl border-2 border-white/20 text-white font-bold text-xl rounded-full hover:bg-white/10 hover:border-white/40 transition-all duration-300 hover:scale-105 shadow-[0_0_30px_rgba(255,255,255,0.1)]"
+            >
+              <span className="flex items-center justify-center gap-2">
+                <Wrench className="w-5 h-5" />
+                Soy Maestro Pro
+              </span>
+            </Link>
+          </div>
+
+          {/* Stats Mejorados */}
+          <div className="grid grid-cols-3 gap-8 max-w-4xl mx-auto animate-scale-in animation-delay-600">
+            <div className="group relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity"></div>
+              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-cyan-500/50 transition-all">
+                <div className="text-5xl font-black bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent mb-2">500+</div>
+                <div className="text-gray-300 font-semibold">Maestros Pro</div>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-300" />
-                <span>Respuesta en minutos</span>
+            </div>
+            <div className="group relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity"></div>
+              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-purple-500/50 transition-all">
+                <div className="text-5xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">15min</div>
+                <div className="text-gray-300 font-semibold">Respuesta</div>
+              </div>
+            </div>
+            <div className="group relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity"></div>
+              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-yellow-500/50 transition-all">
+                <div className="text-5xl font-black bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent mb-2 flex items-center justify-center gap-1">
+                  4.8<Star className="w-8 h-8 fill-yellow-400 text-yellow-400" />
+                </div>
+                <div className="text-gray-300 font-semibold">Calificación</div>
               </div>
             </div>
           </div>
         </div>
-      </section>
 
-      {/* Problems Section */}
-      <section className="py-20 px-4 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-6">
-              ¿Te Ha Pasado Esto?
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Sabemos lo <span className="font-bold text-red-600">frustrante</span> que es buscar un maestro confiable...
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {problems.map((problem) => {
-              const Icon = problem.icon;
-              return (
-                <Card key={problem.title} className="p-6 bg-white border-2 border-red-100 hover:border-red-300 transition-all">
-                  <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                    <Icon className="w-7 h-7 text-red-600" />
-                  </div>
-                  <h3 className="font-bold text-lg mb-2 text-gray-900">{problem.title}</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">{problem.description}</p>
-                </Card>
-              );
-            })}
-          </div>
-
-          <div className="mt-16 text-center">
-            <div className="inline-block bg-gradient-to-r from-green-500 to-green-700 text-white px-8 py-4 rounded-2xl shadow-xl">
-              <p className="text-2xl font-bold mb-2">¡Ya No Más!</p>
-              <p className="text-lg">Con Maestro-Ya, TODO esto se acabó</p>
-            </div>
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
+          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
+            <div className="w-1 h-3 bg-white/50 rounded-full mt-2 animate-pulse"></div>
           </div>
         </div>
       </section>
 
-      {/* Solution Section */}
-      <section className="py-20 px-4 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-6">
-              La Solución Es Simple
+      {/* Como Funciona - ULTRA VISUAL */}
+      <section className="relative py-32 bg-gradient-to-b from-black via-purple-950/20 to-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-20">
+            <div className="inline-block mb-4">
+              <span className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-sm font-bold px-6 py-2 rounded-full">
+                SIMPLE Y RÁPIDO
+              </span>
+            </div>
+            <h2 className="text-5xl md:text-7xl font-black text-white mb-6">
+              <span className="bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent">
+                3 pasos
+              </span>
+              <br />
+              para resolver tu problema
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              En lugar de <span className="line-through text-red-500">rogar</span> a UN maestro que venga,
-              ahora <span className="font-bold text-green-600">ellos compiten por tu trabajo</span>
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
-            <div className="relative">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-700 rounded-3xl flex items-center justify-center mb-6 shadow-2xl transform hover:scale-110 transition-transform">
-                  <span className="text-4xl font-bold text-white">1</span>
-                </div>
-                <h3 className="font-bold text-2xl mb-4 text-gray-900">Publicas en 2 Minutos</h3>
-                <p className="text-gray-600 leading-relaxed text-lg">
-                  Describe qué necesitas, sube 2-3 fotos y tu ubicación.
-                  <span className="block mt-2 font-semibold text-blue-600">
-                    ¡Y listo! Nosotros hacemos el resto.
-                  </span>
-                </p>
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-green-700 rounded-3xl flex items-center justify-center mb-6 shadow-2xl transform hover:scale-110 transition-transform">
-                  <span className="text-4xl font-bold text-white">2</span>
-                </div>
-                <h3 className="font-bold text-2xl mb-4 text-gray-900">Ellos Te Buscan</h3>
-                <p className="text-gray-600 leading-relaxed text-lg">
-                  Maestros <span className="font-semibold">verificados y cercanos</span> reciben tu solicitud.
-                  <span className="block mt-2 font-semibold text-green-600">
-                    En minutos empiezan a cotizar (¡compitiendo por ti!)
-                  </span>
-                </p>
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-purple-700 rounded-3xl flex items-center justify-center mb-6 shadow-2xl transform hover:scale-110 transition-transform">
-                  <span className="text-4xl font-bold text-white">3</span>
-                </div>
-                <h3 className="font-bold text-2xl mb-4 text-gray-900">Tú Decides</h3>
-                <p className="text-gray-600 leading-relaxed text-lg">
-                  Comparas precio, reseñas y experiencia.
-                  <span className="block mt-2 font-semibold text-purple-600">
-                    Eliges al mejor y pagas solo al terminar. Con garantía.
-                  </span>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="py-20 px-4 bg-gradient-to-b from-blue-50 to-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-6">
-              Casos Reales de Quito
-            </h2>
-            <p className="text-xl text-gray-600">
-              Esto es lo que nuestros clientes están diciendo...
-            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial) => (
-              <Card key={testimonial.name} className="p-6 bg-white shadow-lg hover:shadow-2xl transition-all border-2 border-blue-100">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                    {testimonial.avatar}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-gray-900">{testimonial.name}</h4>
-                    <p className="text-sm text-gray-500">{testimonial.location}</p>
-                  </div>
+            {/* Step 1 */}
+            <div className="group relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-3xl blur-2xl opacity-20 group-hover:opacity-40 transition-opacity animate-pulse-slow"></div>
+              <div className="relative bg-gradient-to-br from-gray-900 to-black border border-cyan-500/30 rounded-3xl p-10 hover:border-cyan-500/60 transition-all duration-500 hover:-translate-y-4 hover:shadow-[0_0_50px_rgba(6,182,212,0.3)]">
+                <div className="absolute -top-6 -right-6 w-16 h-16 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-2xl flex items-center justify-center text-white text-3xl font-black shadow-[0_0_30px_rgba(6,182,212,0.5)] animate-float">
+                  1
                 </div>
-
-                <div className="flex gap-1 mb-3">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  ))}
+                <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-cyan-700 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(6,182,212,0.4)]">
+                  <Wrench className="w-10 h-10 text-white" />
                 </div>
-
-                <p className="text-gray-700 leading-relaxed mb-4 italic">
-                  "{testimonial.text}"
+                <h3 className="text-3xl font-black text-white mb-4">
+                  Describe
+                </h3>
+                <p className="text-gray-400 text-lg leading-relaxed">
+                  Di qué necesitas. Sube fotos. Toma <span className="text-cyan-400 font-bold">30 segundos</span>.
                 </p>
+              </div>
+            </div>
 
-                <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                  <span className="text-sm text-gray-500 font-medium">{testimonial.service}</span>
-                  <span className="text-lg font-bold text-green-600">{testimonial.price}</span>
+            {/* Step 2 */}
+            <div className="group relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 rounded-3xl blur-2xl opacity-20 group-hover:opacity-40 transition-opacity animate-pulse-slow animation-delay-2000"></div>
+              <div className="relative bg-gradient-to-br from-gray-900 to-black border border-purple-500/30 rounded-3xl p-10 hover:border-purple-500/60 transition-all duration-500 hover:-translate-y-4 hover:shadow-[0_0_50px_rgba(168,85,247,0.3)]">
+                <div className="absolute -top-6 -right-6 w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center text-white text-3xl font-black shadow-[0_0_30px_rgba(168,85,247,0.5)] animate-float animation-delay-2000">
+                  2
                 </div>
-              </Card>
+                <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-700 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(168,85,247,0.4)]">
+                  <Users className="w-10 h-10 text-white" />
+                </div>
+                <h3 className="text-3xl font-black text-white mb-4">
+                  Compara
+                </h3>
+                <p className="text-gray-400 text-lg leading-relaxed">
+                  Maestros envían precio. Elige el <span className="text-purple-400 font-bold">mejor</span> y más <span className="text-pink-400 font-bold">barato</span>.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="group relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-orange-500 to-yellow-500 rounded-3xl blur-2xl opacity-20 group-hover:opacity-40 transition-opacity animate-pulse-slow animation-delay-4000"></div>
+              <div className="relative bg-gradient-to-br from-gray-900 to-black border border-pink-500/30 rounded-3xl p-10 hover:border-pink-500/60 transition-all duration-500 hover:-translate-y-4 hover:shadow-[0_0_50px_rgba(236,72,153,0.3)]">
+                <div className="absolute -top-6 -right-6 w-16 h-16 bg-gradient-to-br from-pink-400 to-pink-600 rounded-2xl flex items-center justify-center text-white text-3xl font-black shadow-[0_0_30px_rgba(236,72,153,0.5)] animate-float animation-delay-4000">
+                  3
+                </div>
+                <div className="w-20 h-20 bg-gradient-to-br from-pink-500 to-pink-700 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(236,72,153,0.4)]">
+                  <CheckCircle2 className="w-10 h-10 text-white" />
+                </div>
+                <h3 className="text-3xl font-black text-white mb-4">
+                  ¡Listo!
+                </h3>
+                <p className="text-gray-400 text-lg leading-relaxed">
+                  El maestro llega. Arregla todo. <span className="text-pink-400 font-bold">Pagas al final</span>.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Categorías ULTRA MODERNAS */}
+      <section className="relative py-32 bg-gradient-to-b from-black via-cyan-950/10 to-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-20">
+            <h2 className="text-5xl md:text-7xl font-black text-white mb-6">
+              Todos los servicios
+              <br />
+              <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                que necesitas
+              </span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {categories.map((cat, i) => (
+              <div
+                key={i}
+                className="group relative cursor-pointer"
+                style={{ animationDelay: `${i * 100}ms` }}
+              >
+                <div className={`absolute -inset-1 bg-gradient-to-r ${cat.gradient} rounded-3xl blur-xl opacity-0 group-hover:opacity-60 transition-opacity duration-500`}></div>
+                <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-8 hover:border-white/30 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl">
+                  <div className={`w-20 h-20 bg-gradient-to-br ${cat.gradient} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg`}>
+                    {cat.icon}
+                  </div>
+                  <h3 className="text-xl font-black text-white mb-2">{cat.name}</h3>
+                  <p className="text-cyan-400 text-sm font-bold">{cat.count}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Categories Section */}
-      <section className="py-20 px-4 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-6">
-              Todos los Servicios
-            </h2>
-            <p className="text-xl text-gray-600">
-              Maestros profesionales en cada categoría
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {categories.map((cat) => {
-              const Icon = cat.icon;
-              return (
-                <Card 
-                  key={cat.slug}
-                  className={`p-8 text-center hover:shadow-2xl transition-all cursor-pointer border-2 hover:border-blue-400 transform hover:scale-105 ${cat.color}`}
-                >
-                  <Icon className="w-14 h-14 mx-auto mb-4 text-gray-700" strokeWidth={1.5} />
-                  <h3 className="font-bold text-xl text-gray-900">{cat.name}</h3>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Guarantees Section */}
-      <section className="py-20 px-4 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-6">
-              Garantías Que Protegen Tu Inversión
+      {/* Beneficios con efectos NEÓN */}
+      <section className="relative py-32 bg-black">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-black to-black"></div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-20">
+            <h2 className="text-5xl md:text-7xl font-black text-white mb-6">
+              ¿Por qué
+              <span className="relative inline-block mx-4">
+                <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  Maestro-Ya
+                </span>
+                <span className="absolute -inset-2 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 blur-2xl opacity-30 animate-pulse-slow"></span>
+              </span>
+              ?
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card className="p-6 text-center bg-green-50 border-2 border-green-200">
-              <Shield className="w-12 h-12 mx-auto mb-4 text-green-600" />
-              <h3 className="font-bold text-lg mb-2">30 Días de Garantía</h3>
-              <p className="text-gray-600 text-sm">En TODOS los trabajos sin excepción</p>
-            </Card>
-
-            <Card className="p-6 text-center bg-blue-50 border-2 border-blue-200">
-              <BadgeCheck className="w-12 h-12 mx-auto mb-4 text-blue-600" />
-              <h3 className="font-bold text-lg mb-2">100% Verificados</h3>
-              <p className="text-gray-600 text-sm">Cédula y antecedentes penales revisados</p>
-            </Card>
-
-            <Card className="p-6 text-center bg-purple-50 border-2 border-purple-200">
-              <DollarSign className="w-12 h-12 mx-auto mb-4 text-purple-600" />
-              <h3 className="font-bold text-lg mb-2">Paga Al Finalizar</h3>
-              <p className="text-gray-600 text-sm">No anticipos. Solo pagas si quedas satisfecho</p>
-            </Card>
-
-            <Card className="p-6 text-center bg-yellow-50 border-2 border-yellow-200">
-              <Star className="w-12 h-12 mx-auto mb-4 text-yellow-600" />
-              <h3 className="font-bold text-lg mb-2">Reseñas Reales</h3>
-              <p className="text-gray-600 text-sm">De clientes verificados que ya contrataron</p>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA Section */}
-      <section className="py-24 px-4 bg-gradient-to-r from-green-600 via-green-700 to-green-800 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
-        <div className="relative max-w-5xl mx-auto text-center">
-          <Award className="w-20 h-20 mx-auto mb-6 text-yellow-300" />
-          <h2 className="text-4xl sm:text-6xl font-bold mb-6">
-            ¿Listo Para Resolver Tu Problema?
-          </h2>
-          <p className="text-2xl text-green-100 mb-4 leading-relaxed">
-            Únete a <span className="font-bold text-yellow-300">2,847 clientes</span> que ya encontraron su maestro ideal
-          </p>
-          <p className="text-lg text-green-200 mb-10">
-            Publicar tu solicitud toma menos de 2 minutos y es 100% GRATIS
-          </p>
-          
-          <Link href="/sign-up">
-            <Button size="lg" className="text-2xl px-16 py-10 bg-yellow-400 text-green-900 hover:bg-yellow-300 shadow-2xl hover:shadow-3xl transition-all transform hover:scale-110 font-bold">
-              <CheckCircle2 className="w-7 h-7 mr-3" />
-              Publicar Mi Solicitud Ahora
-            </Button>
-          </Link>
-
-          <p className="mt-8 text-green-100 text-sm">
-            ⚡ En promedio, recibes la primera cotización en <span className="font-bold">12 minutos</span>
-          </p>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-300 py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-12 mb-12">
-            <div className="md:col-span-2">
-              <h3 className="text-white font-bold text-2xl mb-4 flex items-center gap-2">
-                <Hammer className="w-6 h-6 text-yellow-400" />
-                Maestro-Ya
-              </h3>
-              <p className="text-gray-400 leading-relaxed mb-6">
-                La plataforma #1 para conectar clientes con maestros profesionales verificados en Ecuador. 
-                Rápido, seguro y confiable.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <div className="flex items-center gap-2 text-sm bg-green-900/30 px-3 py-1.5 rounded-full">
-                  <Shield className="w-4 h-4 text-green-400" />
-                  <span>Verificado</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm bg-yellow-900/30 px-3 py-1.5 rounded-full">
-                  <Star className="w-4 h-4 text-yellow-400" />
-                  <span>Garantizado</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm bg-blue-900/30 px-3 py-1.5 rounded-full">
-                  <Users className="w-4 h-4 text-blue-400" />
-                  <span>+500 Maestros</span>
+          <div className="grid md:grid-cols-3 gap-8">
+            {benefits.map((benefit, i) => (
+              <div key={i} className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="relative bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-10 hover:border-cyan-500/50 transition-all duration-500 hover:-translate-y-2">
+                  <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-[0_0_30px_rgba(6,182,212,0.4)]">
+                    {benefit.icon}
+                  </div>
+                  <h3 className="text-2xl font-black text-white mb-4">{benefit.title}</h3>
+                  <p className="text-gray-400 text-lg leading-relaxed">{benefit.description}</p>
                 </div>
               </div>
-            </div>
-            
-            <div>
-              <h4 className="text-white font-semibold text-lg mb-4">Legal</h4>
-              <ul className="space-y-3 text-sm">
-                <li><Link href="/terminos" className="hover:text-white transition-colors hover:underline">Términos y Condiciones</Link></li>
-                <li><Link href="/privacidad" className="hover:text-white transition-colors hover:underline">Política de Privacidad</Link></li>
-                <li><Link href="/garantia" className="hover:text-white transition-colors hover:underline">Garantía de 30 días</Link></li>
-                <li><Link href="/ayuda" className="hover:text-white transition-colors hover:underline">Centro de Ayuda</Link></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-white font-semibold text-lg mb-4">Contacto</h4>
-              <ul className="space-y-3 text-sm">
-                <li className="flex items-start gap-2">
-                  <MapPin className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
-                  <span>Quito, Ecuador</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <MessageCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span>soporte@maestro-ya.com</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <DollarSign className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span>Pagos en USD</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Clock className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" />
-                  <span>Lun-Dom: 6am-10pm</span>
-                </li>
-              </ul>
-            </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Final EXPLOSIVO */}
+      <section className="relative py-32 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 via-purple-600 to-pink-600 animate-gradient bg-[length:200%_200%]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.3)_100%)]"></div>
+        
+        <div className="relative max-w-5xl mx-auto text-center px-4 z-10">
+          <div className="inline-block mb-8 animate-bounce-slow">
+            <Zap className="w-24 h-24 text-yellow-300 drop-shadow-[0_0_30px_rgba(253,224,71,0.8)]" />
           </div>
           
-          <div className="border-t border-gray-800 pt-8">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-sm text-gray-500">
-                &copy; 2025 Maestro-Ya. Todos los derechos reservados.
-              </p>
-              <p className="text-sm text-gray-500">
-                Hecho con ❤️ en Ecuador 🇪🇨
-              </p>
+          <h2 className="text-5xl md:text-8xl font-black text-white mb-8 leading-tight drop-shadow-2xl">
+            ¿Listo para empezar?
+          </h2>
+          <p className="text-2xl md:text-3xl text-white/90 mb-12 font-light">
+            Únete a <span className="font-black">miles de ecuatorianos</span> que ya confían en nosotros
+          </p>
+          
+          <Link 
+            href="/sign-up"
+            className="group inline-block relative"
+          >
+            <div className="absolute -inset-2 bg-white rounded-full blur-2xl opacity-75 group-hover:opacity-100 transition duration-300 animate-pulse-slow"></div>
+            <div className="relative px-12 py-6 bg-white text-purple-600 font-black text-2xl rounded-full shadow-2xl hover:shadow-white/50 transition-all duration-300 hover:scale-110 flex items-center gap-4">
+              <Sparkles className="w-8 h-8 animate-pulse" />
+              Comenzar GRATIS Ahora
+              <ArrowRight className="w-8 h-8 group-hover:translate-x-2 transition-transform" />
             </div>
-          </div>
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer minimalista */}
+      <footer className="bg-black border-t border-white/10 py-12">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p className="text-gray-500">
+            © 2025 Maestro-Ya. Hecho con ❤️ en Ecuador
+          </p>
         </div>
       </footer>
     </div>
   );
 }
+
+const categories = [
+  { name: 'Electricidad', count: '120+ pros', icon: <Plug className="w-10 h-10 text-white" />, gradient: 'from-yellow-400 to-orange-500' },
+  { name: 'Plomería', count: '95+ pros', icon: <Droplets className="w-10 h-10 text-white" />, gradient: 'from-blue-400 to-cyan-500' },
+  { name: 'Albañilería', count: '150+ pros', icon: <Hammer className="w-10 h-10 text-white" />, gradient: 'from-gray-400 to-gray-600' },
+  { name: 'Pintura', count: '80+ pros', icon: <Paintbrush className="w-10 h-10 text-white" />, gradient: 'from-pink-400 to-rose-500' },
+  { name: 'Carpintería', count: '70+ pros', icon: <Wrench className="w-10 h-10 text-white" />, gradient: 'from-amber-500 to-orange-600' },
+  { name: 'Refrigeración', count: '45+ pros', icon: <Zap className="w-10 h-10 text-white" />, gradient: 'from-cyan-400 to-blue-500' },
+  { name: 'Cerrajería', count: '60+ pros', icon: <Shield className="w-10 h-10 text-white" />, gradient: 'from-purple-400 to-indigo-500' },
+  { name: 'Jardinería', count: '55+ pros', icon: <Lightbulb className="w-10 h-10 text-white" />, gradient: 'from-green-400 to-emerald-500' },
+];
+
+const benefits = [
+  {
+    icon: <Shield className="w-8 h-8 text-white" />,
+    title: '100% Verificados',
+    description: 'Todos pasan verificación de antecedentes penales. Cero riesgos.'
+  },
+  {
+    icon: <Clock className="w-8 h-8 text-white" />,
+    title: 'Super Rápido',
+    description: 'Cotizaciones en menos de 15 minutos. El maestro llega el mismo día.'
+  },
+  {
+    icon: <Award className="w-8 h-8 text-white" />,
+    title: 'Garantía Total',
+    description: 'Si algo sale mal, lo arreglamos gratis. 30 días de garantía.'
+  },
+];

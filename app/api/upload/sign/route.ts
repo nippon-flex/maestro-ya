@@ -21,8 +21,11 @@ export async function POST(req: NextRequest) {
 
     const { uploadUrl, key, fileUrl } = await getUploadUrl(fileName, fileType);
 
-    return NextResponse.json({ uploadUrl, key, fileUrl });
-  } catch (error) {
+return NextResponse.json({ 
+  uploadUrl, 
+  key, 
+  publicUrl: fileUrl  // ← Agregamos publicUrl
+});  } catch (error) {
     console.error('Error generando URL de subida:', error);
     return NextResponse.json(
       { error: 'Error interno del servidor' },

@@ -1,5 +1,5 @@
 import {
-  pgTable, serial, text, integer, varchar, timestamp, numeric, jsonb, pgEnum, primaryKey,
+  pgTable, serial, text, integer, varchar, timestamp, numeric, jsonb, pgEnum, primaryKey, boolean,
 } from 'drizzle-orm/pg-core';
 
 // Enums
@@ -42,6 +42,7 @@ export const pros = pgTable('pros', {
   approvalStatus: approvalStatus('approval_status').notNull().default('pending'),
   approvedAt: timestamp('approved_at', { withTimezone: true }),
   trialEndAt: timestamp('trial_end_at', { withTimezone: true }),
+  isOnline: boolean('is_online').notNull().default(false), // 👈 AGREGAR ESTA LÍNEA
 });
 
 export const proDocuments = pgTable('pro_documents', {
