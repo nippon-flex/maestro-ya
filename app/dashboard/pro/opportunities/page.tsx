@@ -65,8 +65,15 @@ export default async function OpportunitiesPage() {
 
   // Filtrar oportunidades sin cotizar
   const availableOpportunities = opportunities.filter(
-    opp => !quotedRequestIds.has(opp.requestId)
+    opp => opp.requestId && !quotedRequestIds.has(opp.requestId)
   );
+
+  // Calcular urgentes
+  const urgentCount = opportunities.filter(o => {
+    if (!o.createdAt) return false;
+    const diff = Date.now() - new Date(o.createdAt).getTime();
+    return diff < 3600000; // 1 hora
+  }).length;
 
   return (
     <div className="min-h-screen bg-black">
@@ -165,10 +172,7 @@ export default async function OpportunitiesPage() {
                 </div>
               </div>
               <div className="text-3xl font-black text-white mb-1">
-                {opportunities.filter(o => {
-                  const diff = Date.now() - new Date(o.createdAt).getTime();
-                  return diff < 3600000; // 1 hora
-                }).length}
+                {urgentCount}
               </div>
               <div className="text-gray-400 text-sm">Urgentes</div>
             </div>
@@ -208,6 +212,8 @@ export default async function OpportunitiesPage() {
             ) : (
               <div className="space-y-4">
                 {availableOpportunities.map((opp) => {
+                  if (!opp.requestId || !opp.createdAt) return null;
+
                   const isNew = opp.targetStatus === 'notified';
                   const timeAgo = Math.floor((Date.now() - new Date(opp.createdAt).getTime()) / 60000);
                   const isUrgent = timeAgo < 60;
@@ -246,7 +252,7 @@ export default async function OpportunitiesPage() {
 
                                 {/* Descripción */}
                                 <p className="text-gray-300 text-lg mb-4 leading-relaxed">
-                                  {opp.description}
+                                  {opp.description || 'Sin descripción'}
                                 </p>
 
                                 {/* Metadatos */}
@@ -254,7 +260,7 @@ export default async function OpportunitiesPage() {
                                   <div className="flex items-center gap-2 text-gray-400">
                                     <MapPin className="w-4 h-4 text-cyan-400" />
                                     <span className="text-sm">
-                                      {opp.addressStreet}, {opp.addressCity}
+                                      {opp.addressStreet || 'Dirección'}, {opp.addressCity || 'Ciudad'}
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-2 text-gray-400">
