@@ -5,11 +5,10 @@ import { eq } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { 
-  ArrowLeft, MapPin, Calendar, User, 
-  DollarSign, Clock, CheckCircle2, Zap,
-  MessageCircle, Star, Award, TrendingUp,
-  Wrench, Phone, Mail, Shield
+  ArrowLeft, MapPin, DollarSign, Clock, CheckCircle2, Zap,
+  MessageCircle, Award, TrendingUp, Wrench, User, Shield
 } from 'lucide-react';
+import { ContactButtons } from './contact-buttons';
 
 export default async function JobPage({
   params,
@@ -22,7 +21,6 @@ export default async function JobPage({
   const { id } = await params;
   const jobId = Number(id);
 
-  // Obtener información completa del trabajo
   const jobData = await db
     .select({
       jobId: jobs.id,
@@ -61,7 +59,6 @@ export default async function JobPage({
     return <div className="p-8 text-white">Trabajo no encontrado</div>;
   }
 
-  // Obtener nombre del maestro
   let proUser = null;
   if (job.proUserId) {
     const result = await db
@@ -72,7 +69,6 @@ export default async function JobPage({
     proUser = result[0];
   }
 
-  // Obtener el usuario actual
   const [currentUser] = await db
     .select()
     .from(users)
@@ -86,54 +82,40 @@ export default async function JobPage({
     .limit(1);
 
   const isCustomer = currentCustomer && currentCustomer.id === job.customerId;
-
   const priceUSD = ((job.quoteAmountCents || 0) / 100).toFixed(2);
 
-  // Calcular progreso
   const statusConfig = {
     pending: { 
       label: 'Pendiente', 
-      color: 'yellow', 
-      icon: Clock,
       progress: 25,
       gradient: 'from-yellow-500 to-orange-500'
     },
     in_progress: { 
       label: 'En Progreso', 
-      color: 'blue', 
-      icon: Zap,
       progress: 50,
       gradient: 'from-blue-500 to-cyan-500'
     },
     done: { 
       label: 'Completado', 
-      color: 'green', 
-      icon: CheckCircle2,
       progress: 100,
       gradient: 'from-green-500 to-emerald-500'
     },
     disputed: { 
       label: 'En Disputa', 
-      color: 'red', 
-      icon: Shield,
       progress: 75,
       gradient: 'from-red-500 to-pink-500'
     },
     cancelled: { 
       label: 'Cancelado', 
-      color: 'gray', 
-      icon: ArrowLeft,
       progress: 0,
       gradient: 'from-gray-500 to-gray-600'
     },
   };
 
   const status = statusConfig[job.jobStatus] || statusConfig.pending;
-  const StatusIcon = status.icon;
 
   return (
     <div className="min-h-screen bg-black">
-      {/* Hero Header */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-900 via-black to-cyan-900">
           <div className="absolute inset-0 opacity-20">
@@ -167,14 +149,10 @@ export default async function JobPage({
             </div>
 
             <div className={`px-6 py-3 bg-gradient-to-br ${status.gradient} rounded-full border-2 border-white/20 shadow-lg`}>
-              <div className="flex items-center gap-2">
-                <StatusIcon className="w-6 h-6 text-white" />
-                <span className="text-white font-black text-lg">{status.label}</span>
-              </div>
+              <span className="text-white font-black text-lg">{status.label}</span>
             </div>
           </div>
 
-          {/* Barra de Progreso */}
           <div className="mt-8">
             <div className="bg-white/10 backdrop-blur-xl rounded-full h-3 overflow-hidden border border-white/20">
               <div 
@@ -193,9 +171,7 @@ export default async function JobPage({
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Columna Principal */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Detalles del Servicio */}
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-3xl blur-xl"></div>
               <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-8">
@@ -258,7 +234,6 @@ export default async function JobPage({
               </div>
             </div>
 
-            {/* Timeline */}
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-3xl blur-xl"></div>
               <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-8">
@@ -268,7 +243,6 @@ export default async function JobPage({
                 </h2>
 
                 <div className="space-y-6">
-                  {/* Creado */}
                   <div className="flex items-start gap-4">
                     <div className="relative">
                       <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
@@ -292,7 +266,6 @@ export default async function JobPage({
                     </div>
                   </div>
 
-                  {/* Iniciado */}
                   {job.jobStartedAt && (
                     <div className="flex items-start gap-4">
                       <div className="relative">
@@ -318,7 +291,6 @@ export default async function JobPage({
                     </div>
                   )}
 
-                  {/* Completado */}
                   {job.jobCompletedAt && (
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
@@ -343,9 +315,7 @@ export default async function JobPage({
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Info del Maestro */}
             {isCustomer && (
               <div className="relative">
                 <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-3xl blur-xl"></div>
@@ -370,21 +340,14 @@ export default async function JobPage({
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-xl hover:scale-[1.02] transition-all">
-                      <Phone className="w-5 h-5" />
-                      Llamar
-                    </button>
-                    <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/10 border border-white/20 text-white font-bold rounded-xl hover:bg-white/20 transition-all">
-                      <Mail className="w-5 h-5" />
-                      Email
-                    </button>
-                  </div>
+                  <ContactButtons 
+                    email={proUser?.email || 'soporte@maestro-ya.com'} 
+                    name={job.categoryName || 'Servicio'}
+                  />
                 </div>
               </div>
             )}
 
-            {/* Info del Cliente */}
             {!isCustomer && job.customerName && (
               <div className="relative">
                 <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-3xl blur-xl"></div>
@@ -415,7 +378,6 @@ export default async function JobPage({
               </div>
             )}
 
-            {/* Chat Placeholder */}
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-pink-500/20 to-orange-500/20 rounded-3xl blur-xl"></div>
               <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-6">
@@ -435,7 +397,6 @@ export default async function JobPage({
               </div>
             </div>
 
-            {/* Garantía */}
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-3xl blur-xl"></div>
               <div className="relative bg-gradient-to-br from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-2xl p-6">
