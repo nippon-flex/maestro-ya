@@ -4,6 +4,12 @@ import { jobs, quotes, serviceRequests, customers, pros, users, serviceCategorie
 import { eq } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { 
+  ArrowLeft, MapPin, Calendar, User, 
+  DollarSign, Clock, CheckCircle2, Zap,
+  MessageCircle, Star, Award, TrendingUp,
+  Wrench, Phone, Mail, Shield
+} from 'lucide-react';
 
 export default async function JobPage({
   params,
@@ -34,9 +40,10 @@ export default async function JobPage({
       addressCity: addresses.city,
       customerName: customers.fullName,
       customerPhoto: customers.photoUrl,
+      customerId: customers.id,
       proExperience: pros.experienceYears,
       proUserId: pros.userId,
-      customerId: jobs.customerId,
+      proId: pros.id,
     })
     .from(jobs)
     .leftJoin(quotes, eq(jobs.quoteId, quotes.id))
@@ -51,173 +58,400 @@ export default async function JobPage({
   const job = jobData[0];
 
   if (!job) {
-    return <div className="p-8">Trabajo no encontrado</div>;
+    return <div className="p-8 text-white">Trabajo no encontrado</div>;
   }
 
   // Obtener nombre del maestro
   let proUser = null;
-if (job.proUserId) {
-  const result = await db
+  if (job.proUserId) {
+    const result = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, job.proUserId))
+      .limit(1);
+    proUser = result[0];
+  }
+
+  // Obtener el usuario actual
+  const [currentUser] = await db
     .select()
     .from(users)
-    .where(eq(users.id, job.proUserId))
+    .where(eq(users.clerkId, userId))
     .limit(1);
-  proUser = result[0];
-}
 
-const priceUSD = ((job.quoteAmountCents || 0) / 100).toFixed(2);
+  const [currentCustomer] = await db
+    .select()
+    .from(customers)
+    .where(eq(customers.userId, currentUser.id))
+    .limit(1);
+
+  const isCustomer = currentCustomer && currentCustomer.id === job.customerId;
+
+  const priceUSD = ((job.quoteAmountCents || 0) / 100).toFixed(2);
+
+  // Calcular progreso
+  const statusConfig = {
+    pending: { 
+      label: 'Pendiente', 
+      color: 'yellow', 
+      icon: Clock,
+      progress: 25,
+      gradient: 'from-yellow-500 to-orange-500'
+    },
+    in_progress: { 
+      label: 'En Progreso', 
+      color: 'blue', 
+      icon: Zap,
+      progress: 50,
+      gradient: 'from-blue-500 to-cyan-500'
+    },
+    done: { 
+      label: 'Completado', 
+      color: 'green', 
+      icon: CheckCircle2,
+      progress: 100,
+      gradient: 'from-green-500 to-emerald-500'
+    },
+    disputed: { 
+      label: 'En Disputa', 
+      color: 'red', 
+      icon: Shield,
+      progress: 75,
+      gradient: 'from-red-500 to-pink-500'
+    },
+    cancelled: { 
+      label: 'Cancelado', 
+      color: 'gray', 
+      icon: ArrowLeft,
+      progress: 0,
+      gradient: 'from-gray-500 to-gray-600'
+    },
+  };
+
+  const status = statusConfig[job.jobStatus] || statusConfig.pending;
+  const StatusIcon = status.icon;
+
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <Link
-          href="/dashboard/customer"
-          className="text-blue-600 hover:underline mb-4 inline-block"
-        >
-          ← Volver al Dashboard
-        </Link>
-
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold">Trabajo en Curso</h1>
-            <span
-              className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                job.jobStatus === 'pending'
-                  ? 'bg-yellow-100 text-yellow-700'
-                  : job.jobStatus === 'in_progress'
-                  ? 'bg-blue-100 text-blue-700'
-                  : job.jobStatus === 'done'
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-gray-100 text-gray-700'
-              }`}
-            >
-              {job.jobStatus === 'pending'
-                ? '⏳ Pendiente'
-                : job.jobStatus === 'in_progress'
-                ? '🔧 En Progreso'
-                : job.jobStatus === 'done'
-                ? '✅ Completado'
-                : job.jobStatus}
-            </span>
+    <div className="min-h-screen bg-black">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-900 via-black to-cyan-900">
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute top-0 -left-4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+            <div className="absolute top-0 -right-4 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
           </div>
+        </div>
 
-          {/* Información del Servicio */}
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-3">Servicio Contratado</h2>
-            <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-              <p>
-                <strong>Categoría:</strong> {job.categoryName}
-              </p>
-              <p>
-                <strong>Descripción:</strong> {job.requestDescription}
-              </p>
-              <p>
-                <strong>Dirección:</strong> {job.addressStreet}, {job.addressCity}
-              </p>
-              <p>
-                <strong>Precio acordado:</strong>{' '}
-                <span className="text-2xl font-bold text-green-600">${priceUSD}</span>
-              </p>
-              {job.quoteEstimatedHours && (
-                <p>
-                  <strong>Tiempo estimado:</strong> {job.quoteEstimatedHours} horas
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <Link 
+            href={isCustomer ? '/dashboard/customer' : '/dashboard/pro'}
+            className="group inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-xl border border-white/20 text-white font-bold rounded-full hover:bg-white/20 transition-all mb-6"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            Volver al Dashboard
+          </Link>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className={`w-16 h-16 bg-gradient-to-br ${status.gradient} rounded-2xl flex items-center justify-center shadow-lg`}>
+                <Wrench className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl md:text-5xl font-black text-white mb-2">
+                  {job.categoryName}
+                </h1>
+                <p className="text-cyan-200 text-lg">
+                  Trabajo #{job.jobId} • {status.label}
                 </p>
-              )}
+              </div>
+            </div>
+
+            <div className={`px-6 py-3 bg-gradient-to-br ${status.gradient} rounded-full border-2 border-white/20 shadow-lg`}>
+              <div className="flex items-center gap-2">
+                <StatusIcon className="w-6 h-6 text-white" />
+                <span className="text-white font-black text-lg">{status.label}</span>
+              </div>
             </div>
           </div>
 
-          {/* Información del Maestro */}
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-3">Maestro Asignado</h2>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                  {proUser?.email?.[0].toUpperCase() || 'M'}
-                </div>
-                <div>
-                  <p className="font-semibold text-lg">{proUser?.email || 'Maestro'}</p>
-                  <p className="text-sm text-gray-500">
-                    {job.proExperience} años de experiencia
-                  </p>
+          {/* Barra de Progreso */}
+          <div className="mt-8">
+            <div className="bg-white/10 backdrop-blur-xl rounded-full h-3 overflow-hidden border border-white/20">
+              <div 
+                className={`h-full bg-gradient-to-r ${status.gradient} transition-all duration-1000`}
+                style={{ width: `${status.progress}%` }}
+              ></div>
+            </div>
+            <div className="flex justify-between mt-2 text-sm text-gray-400">
+              <span>Inicio</span>
+              <span>{status.progress}% Completado</span>
+              <span>Finalizado</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Columna Principal */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Detalles del Servicio */}
+            <div className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-3xl blur-xl"></div>
+              <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-8">
+                <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-2">
+                  <Wrench className="w-6 h-6 text-purple-500" />
+                  Detalles del Servicio
+                </h2>
+
+                <div className="space-y-6">
+                  <div>
+                    <div className="text-gray-400 text-sm mb-2">Descripción</div>
+                    <p className="text-white text-lg leading-relaxed">
+                      {job.requestDescription || 'Sin descripción'}
+                    </p>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6 pt-6 border-t border-white/10">
+                    <div className="flex items-start gap-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <MapPin className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <div className="text-gray-400 text-sm mb-1">Ubicación</div>
+                        <div className="text-white font-bold text-lg">
+                          {job.addressStreet}
+                        </div>
+                        <div className="text-gray-400">{job.addressCity}</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <DollarSign className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <div className="text-gray-400 text-sm mb-1">Precio Acordado</div>
+                        <div className="text-4xl font-black bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+                          ${priceUSD}
+                        </div>
+                        {job.quoteEstimatedHours && (
+                          <div className="text-gray-400 text-sm mt-1">
+                            ~{job.quoteEstimatedHours} horas estimadas
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {job.quoteMessage && (
+                    <div className="pt-6 border-t border-white/10">
+                      <div className="text-gray-400 text-sm mb-2">Mensaje del Maestro</div>
+                      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                        <p className="text-white leading-relaxed">
+                          "{job.quoteMessage}"
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-              {job.quoteMessage && (
-                <div className="mt-4 p-3 bg-white rounded border">
-                  <p className="text-sm text-gray-700">
-                    <strong>Mensaje del maestro:</strong> {job.quoteMessage}
-                  </p>
+            </div>
+
+            {/* Timeline */}
+            <div className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-3xl blur-xl"></div>
+              <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-8">
+                <h2 className="text-2xl font-black text-white mb-8 flex items-center gap-2">
+                  <TrendingUp className="w-6 h-6 text-cyan-500" />
+                  Estado del Trabajo
+                </h2>
+
+                <div className="space-y-6">
+                  {/* Creado */}
+                  <div className="flex items-start gap-4">
+                    <div className="relative">
+                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+                        <CheckCircle2 className="w-6 h-6 text-white" />
+                      </div>
+                      {job.jobStartedAt && (
+                        <div className="absolute top-12 left-1/2 -translate-x-1/2 w-0.5 h-12 bg-gradient-to-b from-green-500 to-blue-500"></div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-white font-bold text-lg">Trabajo Aceptado</div>
+                      <div className="text-gray-400 text-sm">
+                        {new Date(job.jobCreatedAt).toLocaleDateString('es-EC', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Iniciado */}
+                  {job.jobStartedAt && (
+                    <div className="flex items-start gap-4">
+                      <div className="relative">
+                        <div className={`w-12 h-12 bg-gradient-to-br ${job.jobStatus !== 'pending' ? 'from-blue-500 to-cyan-500' : 'from-gray-500 to-gray-600'} rounded-full flex items-center justify-center shadow-lg`}>
+                          <Zap className="w-6 h-6 text-white" />
+                        </div>
+                        {job.jobCompletedAt && (
+                          <div className="absolute top-12 left-1/2 -translate-x-1/2 w-0.5 h-12 bg-gradient-to-b from-blue-500 to-green-500"></div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-white font-bold text-lg">Trabajo Iniciado</div>
+                        <div className="text-gray-400 text-sm">
+                          {new Date(job.jobStartedAt).toLocaleDateString('es-EC', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Completado */}
+                  {job.jobCompletedAt && (
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+                        <CheckCircle2 className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-white font-bold text-lg">Trabajo Completado</div>
+                        <div className="text-gray-400 text-sm">
+                          {new Date(job.jobCompletedAt).toLocaleDateString('es-EC', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
-          {/* Timeline */}
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-3">Estado del Trabajo</h2>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">
-                  ✓
-                </div>
-                <div>
-                  <p className="font-semibold">Trabajo Aceptado</p>
-                  <p className="text-sm text-gray-500">
-                    {new Date(job.jobCreatedAt).toLocaleDateString('es-EC', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </p>
+          {/* Sidebar */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Info del Maestro */}
+            {isCustomer && (
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-3xl blur-xl"></div>
+                <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-6">
+                  <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2">
+                    <User className="w-5 h-5 text-purple-500" />
+                    Tu Maestro
+                  </h3>
+
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                      {proUser?.email?.[0].toUpperCase() || 'M'}
+                    </div>
+                    <div>
+                      <div className="text-white font-bold text-lg">
+                        {proUser?.email?.split('@')[0] || 'Maestro'}
+                      </div>
+                      <div className="flex items-center gap-1 text-yellow-400 text-sm">
+                        <Award className="w-4 h-4" />
+                        {job.proExperience} años de experiencia
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-xl hover:scale-[1.02] transition-all">
+                      <Phone className="w-5 h-5" />
+                      Llamar
+                    </button>
+                    <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/10 border border-white/20 text-white font-bold rounded-xl hover:bg-white/20 transition-all">
+                      <Mail className="w-5 h-5" />
+                      Email
+                    </button>
+                  </div>
                 </div>
               </div>
+            )}
 
-              {job.jobStartedAt && (
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-                    ✓
+            {/* Info del Cliente */}
+            {!isCustomer && job.customerName && (
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-3xl blur-xl"></div>
+                <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-6">
+                  <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2">
+                    <User className="w-5 h-5 text-cyan-500" />
+                    Cliente
+                  </h3>
+
+                  <div className="flex items-center gap-4 mb-6">
+                    {job.customerPhoto ? (
+                      <img src={job.customerPhoto} alt={job.customerName} className="w-16 h-16 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                        {job.customerName[0]}
+                      </div>
+                    )}
+                    <div>
+                      <div className="text-white font-bold text-lg">
+                        {job.customerName}
+                      </div>
+                      <div className="text-cyan-400 text-sm">
+                        Cliente Verificado ✓
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Chat Placeholder */}
+            <div className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-pink-500/20 to-orange-500/20 rounded-3xl blur-xl"></div>
+              <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-6">
+                <h3 className="text-xl font-black text-white mb-4 flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5 text-pink-500" />
+                  Chat
+                </h3>
+                <div className="text-center py-8">
+                  <MessageCircle className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-400 mb-4">
+                    Chat en tiempo real
+                  </p>
+                  <div className="text-sm text-cyan-400 font-semibold">
+                    Próximamente...
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Garantía */}
+            <div className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-3xl blur-xl"></div>
+              <div className="relative bg-gradient-to-br from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-2xl p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Shield className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold">Trabajo Iniciado</p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(job.jobStartedAt).toLocaleDateString('es-EC', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                    <h3 className="font-black text-white mb-2">🛡️ Garantía 30 Días</h3>
+                    <p className="text-green-200 text-sm leading-relaxed">
+                      Este trabajo está protegido por nuestra garantía de satisfacción.
                     </p>
                   </div>
                 </div>
-              )}
-
-              {job.jobCompletedAt && (
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">
-                    ✓
-                  </div>
-                  <div>
-                    <p className="font-semibold">Trabajo Completado</p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(job.jobCompletedAt).toLocaleDateString('es-EC', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
-          </div>
-
-          {/* Chat Placeholder */}
-          <div className="bg-gray-100 rounded-lg p-6 text-center">
-            <p className="text-gray-500 mb-2">💬 Chat con el maestro</p>
-            <p className="text-sm text-gray-400">(Próximamente)</p>
           </div>
         </div>
       </div>
