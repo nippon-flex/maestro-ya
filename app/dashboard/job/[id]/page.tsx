@@ -1,14 +1,15 @@
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
-import { jobs, quotes, serviceRequests, customers, pros, users, serviceCategories, addresses } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { jobs, quotes, serviceRequests, customers, pros, users, serviceCategories, addresses, reviews } from '@/drizzle/schema';
+import { eq, and } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { 
   ArrowLeft, MapPin, DollarSign, Clock, CheckCircle2, Zap,
-  MessageCircle, Award, TrendingUp, Wrench, User, Shield
+  MessageCircle, Award, TrendingUp, Wrench, User, Shield, Mail, Phone, Star
 } from 'lucide-react';
-import { ContactButtons } from './contact-buttons';
+import StatusButtons from './status-buttons';
+import ReviewForm from './review-form';
 
 export default async function JobPage({
   params,
@@ -82,7 +83,29 @@ export default async function JobPage({
     .limit(1);
 
   const isCustomer = currentCustomer && currentCustomer.id === job.customerId;
+
   const priceUSD = ((job.quoteAmountCents || 0) / 100).toFixed(2);
+
+  // Verificar si es el pro
+  let isPro = false;
+  if (job.proUserId) {
+    isPro = currentUser.id === job.proUserId;
+  }
+
+  // Verificar si ya existe una reseña
+  let hasReview = false;
+  if (isCustomer && job.jobStatus === 'done') {
+    const existingReview = await db
+      .select()
+      .from(reviews)
+      .where(and(
+        eq(reviews.jobId, jobId),
+        eq(reviews.authorId, currentUser.id)
+      ))
+      .limit(1);
+    
+    hasReview = existingReview.length > 0;
+  }
 
   const statusConfig = {
     pending: { 
@@ -340,10 +363,15 @@ export default async function JobPage({
                     </div>
                   </div>
 
-                  <ContactButtons 
-                    email={proUser?.email || 'soporte@maestro-ya.com'} 
-                    name={job.categoryName || 'Servicio'}
-                  />
+                  <div className="space-y-3">
+                    <a
+                      href={`mailto:${proUser?.email || 'soporte@maestro-ya.com'}?subject=Trabajo ${job.categoryName}`}
+                      className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all"
+                    >
+                      <Mail className="w-5 h-5" />
+                      Enviar Email
+                    </a>
+                  </div>
                 </div>
               </div>
             )}
@@ -378,6 +406,24 @@ export default async function JobPage({
               </div>
             )}
 
+            {/* Botones de Estado - SOLO PARA MAESTRO */}
+            {isPro && (
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-3xl blur-xl"></div>
+                <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-6">
+                  <h3 className="text-xl font-black text-white mb-4">
+                    🎯 Acciones
+                  </h3>
+                  <StatusButtons 
+                    jobId={id} 
+                    currentStatus={job.jobStatus} 
+                    isPro={isPro} 
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Chat Próximamente */}
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-pink-500/20 to-orange-500/20 rounded-3xl blur-xl"></div>
               <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-6">
@@ -396,6 +442,39 @@ export default async function JobPage({
                 </div>
               </div>
             </div>
+
+            {/* Formulario de Reseña - Solo para clientes en trabajos completados */}
+            {isCustomer && job.jobStatus === 'done' && !hasReview && (
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-3xl blur-xl"></div>
+                <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-6">
+                  <h3 className="text-xl font-black text-white mb-4 flex items-center gap-2">
+                    <Star className="w-5 h-5 text-purple-500" />
+                    Califica el Servicio
+                  </h3>
+                  <ReviewForm 
+                    jobId={id} 
+                    proName={proUser?.email?.split('@')[0] || 'el maestro'} 
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Mensaje si ya calificó */}
+            {isCustomer && job.jobStatus === 'done' && hasReview && (
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-3xl blur-xl"></div>
+                <div className="relative bg-gradient-to-br from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-2xl p-6">
+                  <div className="flex items-center gap-3 text-green-400">
+                    <Star className="w-6 h-6 fill-green-400" />
+                    <div>
+                      <h3 className="font-bold">Ya calificaste este trabajo</h3>
+                      <p className="text-sm text-green-300">¡Gracias por tu feedback!</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-3xl blur-xl"></div>
