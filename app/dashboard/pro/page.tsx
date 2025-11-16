@@ -1,12 +1,12 @@
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
-import { pros, users } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { pros, users, reviews, customers } from '@/drizzle/schema';
+import { eq, desc, sql } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { 
   Clock, CheckCircle2, AlertCircle, 
-  MapPin, Zap, TrendingUp, Award, Crown, Rocket
+  MapPin, Zap, TrendingUp, Award, Crown, Rocket, Star
 } from 'lucide-react';
 import { ProOnlineToggle } from '@/components/pro-online-toggle';
 import { ProStats } from '@/components/pro-stats';
@@ -30,6 +30,34 @@ export default async function ProDashboard() {
     .limit(1);
 
   if (!pro) redirect('/onboarding');
+
+  // Obtener reseñas del maestro
+  const proReviews = await db
+    .select({
+      id: reviews.id,
+      rating: reviews.rating,
+      comment: reviews.comment,
+      createdAt: reviews.createdAt,
+      customerName: customers.fullName,
+      customerPhoto: customers.photoUrl,
+    })
+    .from(reviews)
+    .innerJoin(customers, eq(reviews.authorId, customers.userId))
+    .where(eq(reviews.targetProId, pro.id))
+    .orderBy(desc(reviews.createdAt))
+    .limit(3);
+
+  // Calcular promedio de todas las reseñas
+  const avgResult = await db
+    .select({
+      avg: sql<number>`avg(${reviews.rating})`,
+      count: sql<number>`count(*)`,
+    })
+    .from(reviews)
+    .where(eq(reviews.targetProId, pro.id));
+
+  const avgRating = Number(avgResult[0]?.avg) || 0;
+  const totalReviews = Number(avgResult[0]?.count) || 0;
 
   // Estados de aprobación
   if (pro.approvalStatus === 'pending') {
@@ -141,6 +169,118 @@ export default async function ProDashboard() {
         {/* Estadísticas Completas */}
         <ProStats />
 
+        {/* Mis Reseñas */}
+        {totalReviews > 0 && (
+          <div className="relative">
+            <div className="absolute -inset-1 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-3xl blur-xl"></div>
+            <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <Star className="w-8 h-8 text-yellow-400 fill-yellow-400" />
+                  <div>
+                    <h2 className="text-2xl font-black text-white">Mis Reseñas</h2>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-5 h-5 ${
+                              i < Math.round(avgRating)
+                                ? 'fill-yellow-400 text-yellow-400'
+                                : 'text-gray-600'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xl font-bold text-white">
+                        {avgRating.toFixed(1)}
+                      </span>
+                      <span className="text-gray-400">({totalReviews} reseñas)</span>
+                    </div>
+                  </div>
+                </div>
+                <Link
+                  href={`/maestro/${pro.id}`}
+                  target="_blank"
+                  className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-yellow-500/50 transition-all hover:scale-105"
+                >
+                  Ver Perfil Público →
+                </Link>
+              </div>
+
+              {proReviews.length > 0 ? (
+                <div className="space-y-4">
+                  {proReviews.map((review) => {
+                    const customerName = review.customerName || 'Cliente';
+                    return (
+                      <div
+                        key={review.id}
+                        className="bg-gray-900/50 border border-white/5 rounded-2xl p-6"
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center border border-white/10 flex-shrink-0 overflow-hidden">
+                            {review.customerPhoto ? (
+                              <img
+                                src={review.customerPhoto}
+                                alt={customerName}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-xl font-bold text-gray-400">
+                                {customerName.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <h3 className="text-white font-semibold">{customerName}</h3>
+                              <div className="flex items-center gap-1">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`w-4 h-4 ${
+                                      i < review.rating
+                                        ? 'fill-yellow-400 text-yellow-400'
+                                        : 'text-gray-600'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            {review.comment && (
+                              <p className="text-gray-300 text-sm leading-relaxed">
+                                "{review.comment}"
+                              </p>
+                            )}
+                            <p className="text-gray-500 text-xs mt-2">
+                              {new Date(review.createdAt).toLocaleDateString('es-EC', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {totalReviews > 3 && (
+                    <Link
+                      href={`/maestro/${pro.id}`}
+                      target="_blank"
+                      className="block text-center py-3 text-cyan-400 hover:text-cyan-300 font-semibold transition-colors"
+                    >
+                      Ver todas las {totalReviews} reseñas →
+                    </Link>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        )}
+
         {/* Quick Actions */}
         <div className="grid md:grid-cols-3 gap-6">
           {/* Ver Oportunidades */}
@@ -179,23 +319,20 @@ export default async function ProDashboard() {
           </div>
 
           {/* Mi Perfil */}
-          <div className="group relative cursor-pointer">
+          <Link href={`/maestro/${pro.id}`} target="_blank" className="group relative">
             <div className="absolute -inset-1 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-3xl blur-xl opacity-25 group-hover:opacity-50 transition-opacity"></div>
             <div className="relative bg-gradient-to-br from-gray-900 to-black border border-yellow-500/30 rounded-3xl p-8 hover:border-yellow-500/60 transition-all hover:-translate-y-2">
               <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
                 <Award className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-2xl font-black text-white mb-2">
-                Mi Perfil
+                Mi Perfil Público
               </h3>
               <p className="text-gray-400">
-                Editar información y certificaciones
+                Ver cómo te ven los clientes
               </p>
-              <div className="mt-4 text-yellow-400 text-sm font-bold">
-                Próximamente...
-              </div>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Tips para Maestros */}
