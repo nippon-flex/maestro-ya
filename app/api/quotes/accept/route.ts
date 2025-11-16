@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
-import { quotes, jobs, serviceRequests, users, customers } from '@/drizzle/schema';
+import { quotes, jobs, serviceRequests, users, customers, pros, serviceCategories } from '@/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
+import { notifyQuoteAccepted } from '@/lib/notifications/create';
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,7 +56,11 @@ export async function POST(request: NextRequest) {
 
     // 2. Verificar que la solicitud pertenece al cliente
     const requestsResult = await db
-      .select()
+      .select({
+        id: serviceRequests.id,
+        customerId: serviceRequests.customerId,
+        categoryId: serviceRequests.categoryId,
+      })
       .from(serviceRequests)
       .where(
         and(
@@ -70,6 +75,20 @@ export async function POST(request: NextRequest) {
     if (!serviceRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
+
+    // Obtener categoría del servicio
+    const [category] = await db
+      .select({ name: serviceCategories.name })
+      .from(serviceCategories)
+      .where(eq(serviceCategories.id, serviceRequest.categoryId))
+      .limit(1);
+
+    // Obtener el user_id del maestro
+    const [pro] = await db
+      .select({ userId: pros.userId })
+      .from(pros)
+      .where(eq(pros.id, quote.proId))
+      .limit(1);
 
     // 3. Crear el trabajo
     const [newJob] = await db
@@ -105,6 +124,21 @@ export async function POST(request: NextRequest) {
           eq(quotes.status, 'pending')
         )
       );
+
+    // 🔔 ENVIAR NOTIFICACIÓN AL MAESTRO
+    if (pro) {
+      const amount = quote.amountCents / 100;
+      const categoryName = category?.name || 'tu servicio';
+      
+      await notifyQuoteAccepted(
+        pro.userId,
+        newJob.id,
+        amount,
+        categoryName
+      );
+      
+      console.log(`✅ Notificación enviada al maestro (user ${pro.userId})`);
+    }
 
     return NextResponse.json({
       success: true,

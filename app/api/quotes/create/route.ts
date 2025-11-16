@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
-import { quotes, users, pros, requestTargets } from '@/drizzle/schema';
+import { quotes, users, pros, requestTargets, serviceRequests, customers } from '@/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
+import { notifyNewQuote } from '@/lib/notifications/create';
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,6 +40,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Maestro no encontrado' }, { status: 404 });
     }
 
+    // Obtener la solicitud para saber quién es el cliente
+    const [request] = await db
+      .select({
+        customerId: serviceRequests.customerId,
+      })
+      .from(serviceRequests)
+      .where(eq(serviceRequests.id, parseInt(requestId)))
+      .limit(1);
+
+    if (!request) {
+      return NextResponse.json({ error: 'Solicitud no encontrada' }, { status: 404 });
+    }
+
+    // Obtener el user_id del cliente
+    const [customer] = await db
+      .select({
+        userId: customers.userId,
+      })
+      .from(customers)
+      .where(eq(customers.id, request.customerId))
+      .limit(1);
+
+    // Crear la cotización
     const [newQuote] = await db
       .insert(quotes)
       .values({
@@ -61,6 +85,21 @@ export async function POST(req: NextRequest) {
           eq(requestTargets.proId, parseInt(proId))
         )
       );
+
+    // 🔔 ENVIAR NOTIFICACIÓN AL CLIENTE
+    if (customer) {
+      const proName = dbUser.email?.split('@')[0] || 'Un maestro';
+      const amount = parseInt(amountCents) / 100;
+      
+      await notifyNewQuote(
+        customer.userId,
+        parseInt(requestId),
+        proName,
+        amount
+      );
+      
+      console.log(`✅ Notificación enviada al cliente (user ${customer.userId})`);
+    }
 
     return NextResponse.json({
       success: true,

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
-import { addresses, serviceRequests, customers, users, pros, proCategories, requestTargets } from '@/drizzle/schema';
+import { addresses, serviceRequests, customers, users, pros, proCategories, requestTargets, serviceCategories } from '@/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
+import { notifyNewRequest } from '@/lib/notifications/create';
 
 export async function POST(req: NextRequest) {
   try {
@@ -29,6 +30,15 @@ export async function POST(req: NextRequest) {
     if (!customer) {
       return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 });
     }
+
+    // Obtener nombre de la categoría
+    const [category] = await db
+      .select({ name: serviceCategories.name })
+      .from(serviceCategories)
+      .where(eq(serviceCategories.id, parseInt(categoryId)))
+      .limit(1);
+
+    const categoryName = category?.name || 'servicio';
 
     const [newAddress] = await db
       .insert(addresses)
@@ -58,20 +68,49 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
+    // Obtener maestros que coincidan (con su userId)
     const matchedPros = await db
-      .select({ proId: pros.id })
+      .select({ 
+        proId: pros.id,
+        userId: pros.userId 
+      })
       .from(pros)
       .innerJoin(proCategories, eq(proCategories.proId, pros.id))
-      .where(and(eq(pros.approvalStatus, 'approved'), eq(proCategories.categoryId, parseInt(categoryId))));
+      .where(and(
+        eq(pros.approvalStatus, 'approved'),
+        eq(proCategories.categoryId, parseInt(categoryId)),
+        eq(pros.isOnline, true) // Solo maestros online
+      ));
 
     if (matchedPros.length > 0) {
       const targetValues = matchedPros.map((pro) => ({
         requestId: newRequest.id,
         proId: pro.proId,
-status: 'notified' as const,        createdAt: new Date(),
+        status: 'notified' as const,
+        createdAt: new Date(),
       }));
 
       await db.insert(requestTargets).values(targetValues);
+
+      // 🔔 ENVIAR NOTIFICACIONES A TODOS LOS MAESTROS
+      for (const pro of matchedPros) {
+        try {
+          // Por ahora distancia fija, después se puede calcular con lat/lng
+          const distance = 0.8;
+          
+          await notifyNewRequest(
+            pro.userId,
+            newRequest.id,
+            categoryName,
+            distance
+          );
+          
+          console.log(`✅ Notificación enviada al maestro (user ${pro.userId})`);
+        } catch (notifError) {
+          console.error(`Error al notificar maestro ${pro.userId}:`, notifError);
+          // Continuar con los demás aunque falle uno
+        }
+      }
     }
 
     return NextResponse.json({
