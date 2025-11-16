@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import StatusButtons from './status-buttons';
 import ReviewForm from './review-form';
+import Chat from './chat';
 
 export default async function JobPage({
   params,
@@ -432,23 +433,11 @@ export default async function JobPage({
               </div>
             )}
 
-            {/* Chat Próximamente */}
+            {/* Chat en Tiempo Real */}
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-pink-500/20 to-orange-500/20 rounded-3xl blur-xl"></div>
               <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-6">
-                <h3 className="text-xl font-black text-white mb-4 flex items-center gap-2">
-                  <MessageCircle className="w-5 h-5 text-pink-500" />
-                  Chat
-                </h3>
-                <div className="text-center py-8">
-                  <MessageCircle className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-400 mb-4">
-                    Chat en tiempo real
-                  </p>
-                  <div className="text-sm text-cyan-400 font-semibold">
-                    Próximamente...
-                  </div>
-                </div>
+                <Chat jobId={id} />
               </div>
             </div>
 
