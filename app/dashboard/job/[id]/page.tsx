@@ -343,10 +343,21 @@ export default async function JobPage({
               <div className="relative">
                 <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-3xl blur-xl"></div>
                 <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-6">
-                  <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2">
-                    <User className="w-5 h-5 text-purple-500" />
-                    Tu Maestro
-                  </h3>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-black text-white flex items-center gap-2">
+                      <User className="w-5 h-5 text-purple-500" />
+                      Tu Maestro
+                    </h3>
+                    {job.proId && (
+                      <Link
+                        href={`/maestro/${job.proId}`}
+                        target="_blank"
+                        className="text-xs px-3 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold rounded-full hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
+                      >
+                        Ver Perfil ⭐
+                      </Link>
+                    )}
+                  </div>
 
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">

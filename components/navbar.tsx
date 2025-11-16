@@ -1,5 +1,6 @@
 import { UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
+import { NotificationsDropdown } from './notifications-dropdown';
 
 export default function Navbar() {
   return (
@@ -10,6 +11,7 @@ export default function Navbar() {
         </Link>
         
         <div className="flex items-center gap-4">
+          <NotificationsDropdown />
           <UserButton 
             afterSignOutUrl="/"
             appearance={{

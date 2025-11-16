@@ -1,6 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
-import { serviceRequests, customers, users, serviceCategories, addresses } from '@/drizzle/schema';
+import { serviceRequests, customers, users, serviceCategories, addresses, quotes, jobs } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -33,6 +33,7 @@ export default async function CustomerDashboard() {
 
   if (!customer) redirect('/onboarding');
 
+  // Obtener solicitudes con sus trabajos asociados (si existen)
   const requestsData = await db
     .select({
       id: serviceRequests.id,
@@ -41,15 +42,31 @@ export default async function CustomerDashboard() {
       createdAt: serviceRequests.createdAt,
       category: serviceCategories.name,
       addressStreet: addresses.street,
+      jobId: jobs.id,
     })
     .from(serviceRequests)
     .leftJoin(serviceCategories, eq(serviceRequests.categoryId, serviceCategories.id))
     .leftJoin(addresses, eq(serviceRequests.addressId, addresses.id))
-    .where(eq(serviceRequests.customerId, customer.id));
+    .leftJoin(quotes, eq(quotes.requestId, serviceRequests.id))
+    .leftJoin(jobs, eq(jobs.quoteId, quotes.id))
+    .where(eq(serviceRequests.customerId, customer.id))
+    .orderBy(serviceRequests.createdAt);
 
-  const totalRequests = requestsData.length;
-  const openRequests = requestsData.filter(r => r.status === 'open').length;
-  const completedRequests = requestsData.filter(r => r.status === 'awarded').length;
+  // Eliminar duplicados (puede haber múltiples quotes por request)
+  const uniqueRequests = requestsData.reduce((acc, current) => {
+    const existing = acc.find(item => item.id === current.id);
+    if (!existing) {
+      acc.push(current);
+    } else if (current.jobId && !existing.jobId) {
+      // Si encontramos un jobId, actualizar
+      existing.jobId = current.jobId;
+    }
+    return acc;
+  }, [] as typeof requestsData);
+
+  const totalRequests = uniqueRequests.length;
+  const openRequests = uniqueRequests.filter(r => r.status === 'open').length;
+  const completedRequests = uniqueRequests.filter(r => r.status === 'awarded').length;
 
   return (
     <div className="min-h-screen bg-black">
@@ -239,71 +256,78 @@ export default async function CustomerDashboard() {
               </div>
             ) : (
               <div className="space-y-4">
-                {requestsData.map((request) => (
-                  <div 
-                    key={request.id}
-                    className="group relative"
-                  >
-                    <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div className="relative bg-gradient-to-br from-gray-800 to-black border border-white/10 rounded-2xl p-6 hover:border-purple-500/50 transition-all">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-start gap-4 mb-4">
-                            <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform">
-                              <FileText className="w-7 h-7 text-white" />
+                {uniqueRequests.map((request) => {
+                  // Si tiene jobId, ir al trabajo. Si no, ir a la solicitud
+                  const detailsLink = request.jobId 
+                    ? `/dashboard/job/${request.jobId}`
+                    : `/dashboard/customer/requests/${request.id}`;
+
+                  return (
+                    <div 
+                      key={request.id}
+                      className="group relative"
+                    >
+                      <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      <div className="relative bg-gradient-to-br from-gray-800 to-black border border-white/10 rounded-2xl p-6 hover:border-purple-500/50 transition-all">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-start gap-4 mb-4">
+                              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform">
+                                <FileText className="w-7 h-7 text-white" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h3 className="text-xl font-black text-white mb-2">
+                                  {request.category || 'Sin categoría'}
+                                </h3>
+                                <p className="text-gray-400 line-clamp-2 leading-relaxed">
+                                  {request.description}
+                                </p>
+                              </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-xl font-black text-white mb-2">
-                                {request.category || 'Sin categoría'}
-                              </h3>
-                              <p className="text-gray-400 line-clamp-2 leading-relaxed">
-                                {request.description}
-                              </p>
+
+                            <div className="flex flex-wrap items-center gap-4 text-sm">
+                              <div className="flex items-center gap-2 text-gray-400">
+                                <MapPin className="w-4 h-4 text-purple-400" />
+                                <span>{request.addressStreet?.substring(0, 40) || 'Sin dirección'}...</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-gray-400">
+                                <Calendar className="w-4 h-4 text-cyan-400" />
+                                <span>{new Date(request.createdAt).toLocaleDateString('es-EC')}</span>
+                              </div>
                             </div>
                           </div>
 
-                          <div className="flex flex-wrap items-center gap-4 text-sm">
-                            <div className="flex items-center gap-2 text-gray-400">
-                              <MapPin className="w-4 h-4 text-purple-400" />
-                              <span>{request.addressStreet?.substring(0, 40) || 'Sin dirección'}...</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-gray-400">
-                              <Calendar className="w-4 h-4 text-cyan-400" />
-                              <span>{new Date(request.createdAt).toLocaleDateString('es-EC')}</span>
-                            </div>
+                          <div className="flex items-center gap-4">
+                            <span
+                              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold shadow-lg ${
+                                request.status === 'open'
+                                  ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                  : request.status === 'awarded'
+                                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                  : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                              }`}
+                            >
+                              {request.status === 'open' && <Clock className="w-4 h-4 animate-pulse" />}
+                              {request.status === 'awarded' && <CheckCircle2 className="w-4 h-4" />}
+                              {request.status === 'open' ? 'Abierta' : request.status === 'awarded' ? 'Asignada' : request.status}
+                            </span>
+
+                            <Link
+                              href={detailsLink}
+                              className="group/btn relative"
+                            >
+                              <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur opacity-75 group-hover/btn:opacity-100 transition"></div>
+                              <div className="relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-full shadow-lg hover:scale-105 transition-all">
+                                Ver Detalles
+                                <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                              </div>
+                            </Link>
                           </div>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                          <span
-                            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold shadow-lg ${
-                              request.status === 'open'
-                                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                : request.status === 'awarded'
-                                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                                : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
-                            }`}
-                          >
-                            {request.status === 'open' && <Clock className="w-4 h-4 animate-pulse" />}
-                            {request.status === 'awarded' && <CheckCircle2 className="w-4 h-4" />}
-                            {request.status === 'open' ? 'Abierta' : request.status === 'awarded' ? 'Asignada' : request.status}
-                          </span>
-
-                          <Link
-                            href={`/dashboard/customer/requests/${request.id}`}
-                            className="group/btn relative"
-                          >
-                            <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur opacity-75 group-hover/btn:opacity-100 transition"></div>
-                            <div className="relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-full shadow-lg hover:scale-105 transition-all">
-                              Ver Detalles
-                              <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                            </div>
-                          </Link>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

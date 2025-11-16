@@ -151,8 +151,10 @@ export const notifications = pgTable('notifications', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   type: varchar('type', { length: 60 }).notNull(),
-  payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
-  readAt: timestamp('read_at', { withTimezone: true }),
+  title: text('title').notNull(),
+  message: text('message').notNull(),
+  payload: jsonb('payload').$type<Record<string, unknown>>(),
+  read: boolean('read').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
