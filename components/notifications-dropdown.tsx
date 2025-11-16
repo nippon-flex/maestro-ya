@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Bell, Check, X, Briefcase, Star, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 interface Notification {
@@ -10,9 +11,13 @@ interface Notification {
   message: string;
   read: boolean;
   createdAt: string;
+  payload?: {
+    link?: string;
+  } | null;
 }
 
 export function NotificationsDropdown() {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -20,7 +25,6 @@ export function NotificationsDropdown() {
 
   useEffect(() => {
     fetchNotifications();
-    // Refrescar cada 30 segundos
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -40,23 +44,27 @@ export function NotificationsDropdown() {
     }
   };
 
- const markAsRead = async (notificationId: number) => {
-  console.log('🔔 Marcando como leída:', notificationId);
-  try {
-      const res = await fetch('/api/notifications', {
+  const markAsRead = async (notificationId: number) => {
+    // Marcar como leída de forma optimista (inmediato en UI)
+    setNotifications(prev =>
+      prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+    );
+    setUnreadCount(prev => Math.max(0, prev - 1));
+
+    // Enviar al servidor
+    try {
+      await fetch('/api/notifications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notificationId }),
       });
-
-      if (res.ok) {
-        setNotifications(prev =>
-          prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
-        );
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      }
     } catch (error) {
       console.error('Error al marcar como leída:', error);
+      // Revertir si falla
+      setNotifications(prev =>
+        prev.map(n => n.id === notificationId ? { ...n, read: false } : n)
+      );
+      setUnreadCount(prev => prev + 1);
     }
   };
 
@@ -172,53 +180,88 @@ export function NotificationsDropdown() {
                   </div>
                 ) : (
                   <div className="divide-y divide-white/5">
-                    {notifications.map((notif) => (
-                      <div
-                        key={notif.id}
-                        className={`p-4 hover:bg-white/5 transition-all ${
-                          !notif.read ? 'bg-cyan-500/5' : ''
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          {/* Icon */}
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            !notif.read
-                              ? 'bg-cyan-500/20 border border-cyan-500/30'
-                              : 'bg-gray-800 border border-white/10'
-                          }`}>
-                            {getIcon(notif.type)}
-                          </div>
-
-                          {/* Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2 mb-1">
-                              <h4 className={`font-semibold text-sm ${
-                                !notif.read ? 'text-white' : 'text-gray-300'
-                              }`}>
-                                {notif.title}
-                              </h4>
-                              {!notif.read && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    markAsRead(notif.id);
-                                  }}
-                                  className="text-cyan-400 hover:text-cyan-300 transition-colors"
-                                >
-                                  <Check className="w-4 h-4" />
-                                </button>
-                              )}
+                    {notifications.map((notif) => {
+                      const link = notif.payload?.link;
+                      
+                      return (
+                        <div
+                          key={notif.id}
+                          onClick={() => {
+                            if (link) {
+                              // Marcar como leída si no lo está
+                              if (!notif.read) {
+                                markAsRead(notif.id);
+                              }
+                              
+                              setIsOpen(false);
+                              
+                              // Navegar
+                              const [path, hash] = link.split('#');
+                              router.push(link);
+                              
+                              // Si hay hash, hacer scroll después de un momento
+                              if (hash) {
+                                setTimeout(() => {
+                                  const element = document.getElementById(hash);
+                                  if (element) {
+                                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                  }
+                                }, 300);
+                              }
+                            }
+                          }}
+                          className={`p-4 transition-all ${
+                            !notif.read ? 'bg-cyan-500/5' : ''
+                          } ${link ? 'hover:bg-white/10 cursor-pointer' : 'hover:bg-white/5'}`}
+                        >
+                          <div className="flex items-start gap-3">
+                            {/* Icon */}
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                              !notif.read
+                                ? 'bg-cyan-500/20 border border-cyan-500/30'
+                                : 'bg-gray-800 border border-white/10'
+                            }`}>
+                              {getIcon(notif.type)}
                             </div>
-                            <p className="text-gray-400 text-xs leading-relaxed mb-2">
-                              {notif.message}
-                            </p>
-                            <span className="text-gray-500 text-xs">
-                              {formatTime(notif.createdAt)}
-                            </span>
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2 mb-1">
+                                <h4 className={`font-semibold text-sm ${
+                                  !notif.read ? 'text-white' : 'text-gray-300'
+                                }`}>
+                                  {notif.title}
+                                </h4>
+                                {!notif.read && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      markAsRead(notif.id);
+                                    }}
+                                    className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                              <p className="text-gray-400 text-xs leading-relaxed mb-2">
+                                {notif.message}
+                              </p>
+                              <div className="flex items-center justify-between">
+                                <span className="text-gray-500 text-xs">
+                                  {formatTime(notif.createdAt)}
+                                </span>
+                                {link && (
+                                  <span className="text-cyan-400 text-xs font-semibold">
+                                    Ver detalles →
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

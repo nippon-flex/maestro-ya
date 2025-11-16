@@ -21,6 +21,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     }
 
+    console.log('🔍 USER ID ACTUAL:', user.id, '| Email:', user.email);
+
     const userNotifications = await db
       .select({
         id: notifications.id,
@@ -29,11 +31,14 @@ export async function GET() {
         message: notifications.message,
         read: notifications.read,
         createdAt: notifications.createdAt,
+        payload: notifications.payload,
       })
       .from(notifications)
       .where(eq(notifications.userId, user.id))
       .orderBy(desc(notifications.createdAt))
       .limit(20);
+
+    console.log('📬 Notificaciones encontradas:', userNotifications.length);
 
     const unreadCount = userNotifications.filter(n => !n.read).length;
 
