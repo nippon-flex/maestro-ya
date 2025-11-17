@@ -40,20 +40,19 @@ export async function GET(request: NextRequest) {
           .limit(1);
 
         return {
-          id: pro.proId,
-          name: pro.customerName || pro.userEmail?.split('@')[0] || 'Maestro',
-          email: pro.userEmail,
-          category: categories[0]?.categoryName || 'General',
-          experience: pro.experienceYears,
-          photoUrl: pro.customerPhoto,
-          isOnline: Math.random() > 0.5, // TODO: Implementar estado online/offline real
-          rating: 4.5 + Math.random() * 0.5, // TODO: Calcular rating real de reviews
-          // Coordenadas simuladas por ahora (Quito)
-          // TODO: Agregar campo de ubicación a la tabla pros
-          lat: -0.1807 + (Math.random() - 0.5) * 0.05,
-          lng: -78.4678 + (Math.random() - 0.5) * 0.05,
-          distance: (Math.random() * 5).toFixed(1),
-        };
+  id: pro.proId,
+  userId: pro.userId,  // ← AGREGA ESTA LÍNEA
+  name: pro.customerName || pro.userEmail?.split('@')[0] || 'Maestro',
+  email: pro.userEmail,
+  category: categories[0]?.categoryName || 'General',
+  experience: pro.experienceYears,
+  photoUrl: pro.customerPhoto,
+  isOnline: Math.random() > 0.5,
+  rating: 4.5 + Math.random() * 0.5,
+  lat: -0.1807 + (Math.random() - 0.5) * 0.05,
+  lng: -78.4678 + (Math.random() - 0.5) * 0.05,
+  distance: (Math.random() * 5).toFixed(1),
+};
       })
     );
 

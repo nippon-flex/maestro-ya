@@ -4,14 +4,13 @@ import { serviceRequests, customers, users, serviceCategories, addresses, quotes
 import { eq } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  Plus, Clock, CheckCircle2, FileText, 
+import {
+  Plus, Clock, CheckCircle2, FileText,
   ArrowRight, Zap, TrendingUp, Star,
   MapPin, Calendar, Users, Heart, Crown, Gift
 } from 'lucide-react';
-import { NearbyProsMap } from '@/components/maps/nearby-pros-map';
+import NearbyProsMap from '@/components/maps/nearby-pros-map';
 import { CustomerStats } from '@/components/customer-stats';
-import { UrgentMode, BudgetCalculator } from '@/components/urgent-mode';
 
 export default async function CustomerDashboard() {
   const { userId } = await auth();
@@ -42,6 +41,8 @@ export default async function CustomerDashboard() {
       createdAt: serviceRequests.createdAt,
       category: serviceCategories.name,
       addressStreet: addresses.street,
+      addressLat: addresses.lat,
+      addressLng: addresses.lng,
       jobId: jobs.id,
     })
     .from(serviceRequests)
@@ -52,13 +53,12 @@ export default async function CustomerDashboard() {
     .where(eq(serviceRequests.customerId, customer.id))
     .orderBy(serviceRequests.createdAt);
 
-  // Eliminar duplicados (puede haber múltiples quotes por request)
+  // Eliminar duplicados
   const uniqueRequests = requestsData.reduce((acc, current) => {
     const existing = acc.find(item => item.id === current.id);
     if (!existing) {
       acc.push(current);
     } else if (current.jobId && !existing.jobId) {
-      // Si encontramos un jobId, actualizar
       existing.jobId = current.jobId;
     }
     return acc;
@@ -67,6 +67,16 @@ export default async function CustomerDashboard() {
   const totalRequests = uniqueRequests.length;
   const openRequests = uniqueRequests.filter(r => r.status === 'open').length;
   const completedRequests = uniqueRequests.filter(r => r.status === 'awarded').length;
+
+  // Obtener ubicación del usuario (de su última solicitud)
+  let userLatitude = -0.1807; // Quito por defecto
+  let userLongitude = -78.4678;
+
+  const lastRequest = uniqueRequests.find(r => r.addressLat && r.addressLng);
+  if (lastRequest?.addressLat && lastRequest?.addressLng) {
+    userLatitude = Number(lastRequest.addressLat);
+    userLongitude = Number(lastRequest.addressLng);
+  }
 
   return (
     <div className="min-h-screen bg-black">
@@ -178,12 +188,6 @@ export default async function CustomerDashboard() {
           </div>
         </div>
 
-        {/* Modo Urgente y Calculadora */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <UrgentMode />
-          <BudgetCalculator />
-        </div>
-
         {/* Mapa de Maestros Cercanos */}
         <div className="relative">
           <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-3xl blur-2xl"></div>
@@ -200,10 +204,15 @@ export default async function CustomerDashboard() {
               </div>
               <div className="flex items-center gap-2 bg-green-500/20 px-4 py-2 rounded-full">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
-                <span className="text-green-400 font-bold text-sm">12 Online</span>
+                <span className="text-green-400 font-bold text-sm">Online</span>
               </div>
             </div>
-            <NearbyProsMap />
+            
+            <NearbyProsMap 
+              userLatitude={userLatitude}
+              userLongitude={userLongitude}
+              radiusKm={10}
+            />
           </div>
         </div>
 
@@ -257,7 +266,6 @@ export default async function CustomerDashboard() {
             ) : (
               <div className="space-y-4">
                 {uniqueRequests.map((request) => {
-                  // Si tiene jobId, ir al trabajo. Si no, ir a la solicitud
                   const detailsLink = request.jobId 
                     ? `/dashboard/job/${request.jobId}`
                     : `/dashboard/customer/requests/${request.id}`;

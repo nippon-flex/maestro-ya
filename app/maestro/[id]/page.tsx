@@ -11,7 +11,14 @@ export default async function MaestroProfilePage({
 }) {
   const { id } = await params;
 
-  // Obtener datos del maestro
+// Validar que el ID sea válido
+if (!id || isNaN(parseInt(id))) {
+  notFound();
+}
+
+const userId = parseInt(id);
+
+// Obtener datos del maestro
   const maestro = await db
     .select({
       userId: users.id,
@@ -25,7 +32,7 @@ export default async function MaestroProfilePage({
     })
     .from(pros)
     .innerJoin(users, eq(pros.userId, users.id))
-    .where(eq(pros.id, parseInt(id)))
+    .where(eq(pros.userId, userId))
     .limit(1);
 
   if (!maestro.length || maestro[0].approvalStatus !== 'approved') {
