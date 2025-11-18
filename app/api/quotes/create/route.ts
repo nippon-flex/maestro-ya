@@ -76,16 +76,6 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    await db
-      .update(requestTargets)
-      .set({ status: 'viewed' })
-      .where(
-        and(
-          eq(requestTargets.requestId, parseInt(requestId)),
-          eq(requestTargets.proId, parseInt(proId))
-        )
-      );
-
     // 🔔 ENVIAR NOTIFICACIÓN AL CLIENTE
     if (customer) {
       const proName = dbUser.email?.split('@')[0] || 'Un maestro';
