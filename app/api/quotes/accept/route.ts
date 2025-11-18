@@ -94,11 +94,11 @@ export async function POST(request: NextRequest) {
     const [newJob] = await db
       .insert(jobs)
       .values({
+        requestId: quote.requestId,  // ← AGREGADO
         quoteId: quote.id,
         proId: quote.proId,
         customerId: customer.id,
         status: 'pending',
-        startedAt: new Date(),
       })
       .returning();
 
@@ -108,13 +108,7 @@ export async function POST(request: NextRequest) {
       .set({ status: 'accepted' })
       .where(eq(quotes.id, quoteIdNum));
 
-    // 5. Actualizar la solicitud
-    await db
-      .update(serviceRequests)
-      .set({ status: 'awarded' })
-      .where(eq(serviceRequests.id, quote.requestId));
-
-    // 6. Rechazar las otras cotizaciones
+    // 5. Rechazar las otras cotizaciones
     await db
       .update(quotes)
       .set({ status: 'rejected' })
