@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { categoryId, description, street, city, photos } = body;
+    const { categoryId, title, description, street, city, photos, urgentMode } = body;
 
     if (!categoryId || !description || !street || !city) {
       return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 });
@@ -50,8 +50,7 @@ export async function POST(req: NextRequest) {
         country: 'EC',
         lat: '-0.1807',
         lng: '-78.4678',
-        h3res8: '88754e641ffffff',
-        createdAt: new Date(),
+        h3Res8: '88754e641ffffff',
       })
       .returning();
 
@@ -61,10 +60,10 @@ export async function POST(req: NextRequest) {
         customerId: customer.id,
         categoryId: parseInt(categoryId),
         addressId: newAddress.id,
+        title: title || 'Solicitud de servicio',
         description,
-        photos: photos || [],
-        status: 'open',
-        createdAt: new Date(),
+        photosUrls: photos || [],
+        urgentMode: urgentMode || false,
       })
       .returning();
 
@@ -79,15 +78,13 @@ export async function POST(req: NextRequest) {
       .where(and(
         eq(pros.approvalStatus, 'approved'),
         eq(proCategories.categoryId, parseInt(categoryId)),
-        eq(pros.isOnline, true) // Solo maestros online
+        eq(pros.isOnline, true)
       ));
 
     if (matchedPros.length > 0) {
       const targetValues = matchedPros.map((pro) => ({
         requestId: newRequest.id,
         proId: pro.proId,
-        status: 'notified' as const,
-        createdAt: new Date(),
       }));
 
       await db.insert(requestTargets).values(targetValues);
@@ -95,7 +92,6 @@ export async function POST(req: NextRequest) {
       // 🔔 ENVIAR NOTIFICACIONES A TODOS LOS MAESTROS
       for (const pro of matchedPros) {
         try {
-          // Por ahora distancia fija, después se puede calcular con lat/lng
           const distance = 0.8;
           
           await notifyNewRequest(
@@ -108,7 +104,6 @@ export async function POST(req: NextRequest) {
           console.log(`✅ Notificación enviada al maestro (user ${pro.userId})`);
         } catch (notifError) {
           console.error(`Error al notificar maestro ${pro.userId}:`, notifError);
-          // Continuar con los demás aunque falle uno
         }
       }
     }
