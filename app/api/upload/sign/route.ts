@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       uploadUrl, 
       key, 
-      publicUrl: fileUrl
+      fileUrl
     });
   } catch (error) {
     console.error('❌ Error generando URL de subida:', error);

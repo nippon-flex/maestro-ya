@@ -14,14 +14,20 @@ const InteractiveMap = dynamic(() => import('./interactive-map'), {
   ),
 });
 
+interface Category {
+  id: number;
+  name: string;
+  iconName?: string | null;
+}
+
 interface Pro {
   id: number;
   userId: number;
   name: string;
   photoUrl: string | null;
-  categories: string[];
-  rating: number;
-  reviewCount: number;
+  categories: Category[];
+  rating?: number;
+  reviewCount?: number;
   latitude: number;
   longitude: number;
   distance: number | string;
@@ -46,7 +52,7 @@ export default function NearbyProsMap({
     async function fetchNearbyPros() {
       try {
         const response = await fetch(
-          `/api/pros/nearby?latitude=${userLatitude}&longitude=${userLongitude}&radiusKm=${radiusKm}`
+          `/api/pros/nearby?lat=${userLatitude}&lng=${userLongitude}&maxDistance=${radiusKm}`
         );
 
         if (!response.ok) {
@@ -69,7 +75,7 @@ export default function NearbyProsMap({
     return (
       <div className="relative">
         <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-3xl blur-xl"></div>
-        <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-8">
+        <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-8">      
           <div className="flex flex-col items-center justify-center py-12">
             <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mb-4" />
             <p className="text-white/60">Buscando maestros cercanos...</p>
@@ -82,8 +88,8 @@ export default function NearbyProsMap({
   if (error) {
     return (
       <div className="relative">
-        <div className="absolute -inset-1 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-3xl blur-xl"></div>
-        <div className="relative bg-gradient-to-br from-gray-900 to-black border border-red-500/20 rounded-3xl p-8">
+        <div className="absolute -inset-1 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-3xl blur-xl"></div> 
+        <div className="relative bg-gradient-to-br from-gray-900 to-black border border-red-500/20 rounded-3xl p-8">    
           <div className="flex flex-col items-center justify-center py-12">
             <p className="text-red-400 mb-2">⚠️ {error}</p>
             <button
@@ -110,9 +116,9 @@ export default function NearbyProsMap({
       {/* Lista de maestros */}
       <div className="relative">
         <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-3xl blur-xl"></div>
-        <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-6">
+        <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-6">      
           <h3 className="text-xl font-bold text-white mb-4">
-            🔍 {pros.length} {pros.length === 1 ? 'Maestro encontrado' : 'Maestros encontrados'}
+            📍 {pros.length} {pros.length === 1 ? 'Maestro encontrado' : 'Maestros encontrados'}
           </h3>
 
           {pros.length === 0 ? (
@@ -124,7 +130,7 @@ export default function NearbyProsMap({
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {pros.map((pro) => {
                 const initial = pro.name ? pro.name.charAt(0).toUpperCase() : 'M';
-                
+
                 return (
                   <a
                     key={pro.id}
@@ -163,7 +169,7 @@ export default function NearbyProsMap({
                             key={i}
                             className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs"
                           >
-                            {cat}
+                            {cat.name}
                           </span>
                         ))}
                       </div>

@@ -27,9 +27,8 @@ export default async function RequestDetailsPage({
     .select({
       id: serviceRequests.id,
       description: serviceRequests.description,
-      status: serviceRequests.status,
       createdAt: serviceRequests.createdAt,
-      photos: serviceRequests.photos,
+      photos: serviceRequests.photosUrls,
       categoryName: serviceCategories.name,
       addressStreet: addresses.street,
       addressCity: addresses.city,
@@ -87,6 +86,7 @@ export default async function RequestDetailsPage({
 
   const pendingQuotes = quotesWithProInfo.filter(q => q.status === 'pending');
   const acceptedQuote = quotesWithProInfo.find(q => q.status === 'accepted');
+  const hasAcceptedQuote = !!acceptedQuote;
 
   return (
     <div className="min-h-screen bg-black">
@@ -183,16 +183,22 @@ export default async function RequestDetailsPage({
                       <div className="text-gray-400 text-sm">Estado:</div>
                       <span
                         className={`inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm font-bold ${
-                          request.status === 'open'
-                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                            : request.status === 'awarded'
+                          hasAcceptedQuote
                             ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                            : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                            : 'bg-green-500/20 text-green-400 border border-green-500/30'
                         }`}
                       >
-                        {request.status === 'open' && <Clock className="w-4 h-4 animate-pulse" />}
-                        {request.status === 'awarded' && <CheckCircle2 className="w-4 h-4" />}
-                        {request.status === 'open' ? '⏳ Esperando cotizaciones' : request.status === 'awarded' ? '✓ Maestro asignado' : request.status}
+                        {hasAcceptedQuote ? (
+                          <>
+                            <CheckCircle2 className="w-4 h-4" />
+                            ✓ Maestro asignado
+                          </>
+                        ) : (
+                          <>
+                            <Clock className="w-4 h-4 animate-pulse" />
+                            ⏳ Esperando cotizaciones
+                          </>
+                        )}
                       </span>
                     </div>
                   </div>
@@ -309,7 +315,7 @@ export default async function RequestDetailsPage({
                           </div>
 
                           {/* Botón */}
-                          {quote.status === 'pending' && request.status === 'open' && (
+                          {quote.status === 'pending' && !hasAcceptedQuote && (
                             <AcceptQuoteButton quoteId={quote.id} />
                           )}
 

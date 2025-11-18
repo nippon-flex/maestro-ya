@@ -13,14 +13,20 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+interface Category {
+  id: number;
+  name: string;
+  iconName?: string | null;
+}
+
 interface Pro {
   id: number;
   userId: number;
-  fullName: string;
+  name: string;
   photoUrl: string | null;
-  categories: string[];
-  rating: number;
-  reviewCount: number;
+  categories: Category[];
+  rating?: number;
+  reviewCount?: number;
   latitude: number;
   longitude: number;
   distance: number | string;
@@ -50,7 +56,7 @@ export default function InteractiveMap({ userLocation, pros, radiusKm = 10 }: In
 
   // Icono personalizado para el usuario
   const userIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',      
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
@@ -60,7 +66,7 @@ export default function InteractiveMap({ userLocation, pros, radiusKm = 10 }: In
 
   // Icono personalizado para maestros
   const proIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',     
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
@@ -70,7 +76,7 @@ export default function InteractiveMap({ userLocation, pros, radiusKm = 10 }: In
 
   return (
     <div className="relative">
-      <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-3xl blur-xl"></div>
+      <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-3xl blur-xl"></div>  
       <div className="relative overflow-hidden rounded-3xl border border-white/10">
         <MapContainer
           center={[userLocation.lat, userLocation.lng]}
@@ -108,8 +114,8 @@ export default function InteractiveMap({ userLocation, pros, radiusKm = 10 }: In
           </Marker>
 
           {/* Marcadores de maestros */}
-{pros.filter(pro => pro.latitude && pro.longitude).map((pro) => {
-            const name = pro.fullName || 'Sin nombre';
+          {pros.filter(pro => pro.latitude && pro.longitude).map((pro) => {
+            const name = pro.name || 'Sin nombre';
             const initial = name.charAt(0).toUpperCase();
             const distance = Number(pro.distance || 0);
             const rating = Number(pro.rating || 0);
@@ -144,14 +150,14 @@ export default function InteractiveMap({ userLocation, pros, radiusKm = 10 }: In
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex flex-wrap gap-1 mb-2">
                       {categories.slice(0, 2).map((cat, i) => (
                         <span
                           key={i}
                           className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs"
                         >
-                          {cat}
+                          {cat.name}
                         </span>
                       ))}
                     </div>

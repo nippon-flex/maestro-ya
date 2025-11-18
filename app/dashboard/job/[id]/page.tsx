@@ -11,6 +11,7 @@ import {
 import StatusButtons from './status-buttons';
 import ReviewForm from './review-form';
 import Chat from './chat';
+import WarrantyClaimForm from './warranty-claim-form';
 
 export default async function JobPage({
   params,
@@ -34,7 +35,7 @@ export default async function JobPage({
       quoteEstimatedHours: quotes.estimatedHours,
       quoteMessage: quotes.message,
       requestDescription: serviceRequests.description,
-      requestPhotos: serviceRequests.photos,
+      requestPhotos: serviceRequests.photosUrls,
       categoryName: serviceCategories.name,
       addressStreet: addresses.street,
       addressCity: addresses.city,
@@ -474,22 +475,47 @@ export default async function JobPage({
               </div>
             )}
 
-            <div className="relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-3xl blur-xl"></div>
-              <div className="relative bg-gradient-to-br from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-2xl p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Shield className="w-6 h-6 text-white" />
+            {/* Garantía con Botón de Reclamar - Solo para clientes en trabajos completados */}
+            {isCustomer && job.jobStatus === 'done' && (
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-3xl blur-xl"></div>
+                <div className="relative bg-gradient-to-br from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-2xl p-6">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Shield className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-white mb-2">🛡️ Garantía 30 Días</h3>
+                      <p className="text-green-200 text-sm leading-relaxed mb-4">
+                        Este trabajo está protegido por nuestra garantía de satisfacción.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-black text-white mb-2">🛡️ Garantía 30 Días</h3>
-                    <p className="text-green-200 text-sm leading-relaxed">
-                      Este trabajo está protegido por nuestra garantía de satisfacción.
-                    </p>
+                  
+                  <WarrantyClaimForm jobId={jobId} />
+                </div>
+              </div>
+            )}
+
+            {/* Mensaje de Garantía para maestros */}
+            {!isCustomer && (
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-3xl blur-xl"></div>
+                <div className="relative bg-gradient-to-br from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-2xl p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Shield className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-white mb-2">🛡️ Garantía 30 Días</h3>
+                      <p className="text-green-200 text-sm leading-relaxed">
+                        Este trabajo está protegido por nuestra garantía de satisfacción.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,16 +1,16 @@
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
-import { serviceRequests, customers, users, serviceCategories, addresses, quotes, jobs } from '@/drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { serviceRequests, customers, users, serviceCategories, addresses, quotes, jobs } from '@/drizzle/schema';       
+import { eq, desc } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import {
   Plus, Clock, CheckCircle2, FileText,
   ArrowRight, Zap, TrendingUp, Star,
-  MapPin, Calendar, Users, Heart, Crown, Gift
+  MapPin, Calendar, Users, Crown, Gift
 } from 'lucide-react';
 import NearbyProsMap from '@/components/maps/nearby-pros-map';
-import { CustomerStats } from '@/components/customer-stats';
+// REMOVIDO: import { CustomerStats } from '@/components/customer-stats';
 
 export default async function CustomerDashboard() {
   const { userId } = await auth();
@@ -37,7 +37,6 @@ export default async function CustomerDashboard() {
     .select({
       id: serviceRequests.id,
       description: serviceRequests.description,
-      status: serviceRequests.status,
       createdAt: serviceRequests.createdAt,
       category: serviceCategories.name,
       addressStreet: addresses.street,
@@ -51,10 +50,11 @@ export default async function CustomerDashboard() {
     .leftJoin(quotes, eq(quotes.requestId, serviceRequests.id))
     .leftJoin(jobs, eq(jobs.quoteId, quotes.id))
     .where(eq(serviceRequests.customerId, customer.id))
-    .orderBy(serviceRequests.createdAt);
+    .orderBy(desc(serviceRequests.createdAt));
 
-  // Eliminar duplicados
-  const uniqueRequests = requestsData.reduce((acc, current) => {
+  // Eliminar duplicados - con validación
+  const uniqueRequests = (requestsData || []).reduce((acc, current) => {
+    if (!current) return acc;
     const existing = acc.find(item => item.id === current.id);
     if (!existing) {
       acc.push(current);
@@ -65,14 +65,14 @@ export default async function CustomerDashboard() {
   }, [] as typeof requestsData);
 
   const totalRequests = uniqueRequests.length;
-  const openRequests = uniqueRequests.filter(r => r.status === 'open').length;
-  const completedRequests = uniqueRequests.filter(r => r.status === 'awarded').length;
+  const openRequests = uniqueRequests.filter(r => r && !r.jobId).length;
+  const completedRequests = uniqueRequests.filter(r => r && r.jobId).length;
 
   // Obtener ubicación del usuario (de su última solicitud)
   let userLatitude = -0.1807; // Quito por defecto
   let userLongitude = -78.4678;
 
-  const lastRequest = uniqueRequests.find(r => r.addressLat && r.addressLng);
+  const lastRequest = uniqueRequests.find(r => r && r.addressLat && r.addressLng);
   if (lastRequest?.addressLat && lastRequest?.addressLng) {
     userLatitude = Number(lastRequest.addressLat);
     userLongitude = Number(lastRequest.addressLng);
@@ -106,7 +106,7 @@ export default async function CustomerDashboard() {
                 Todo listo para tu próximo servicio
               </p>
             </div>
-            
+
             <Link 
               href="/dashboard/customer/requests/new"
               className="group relative"
@@ -191,7 +191,7 @@ export default async function CustomerDashboard() {
         {/* Mapa de Maestros Cercanos */}
         <div className="relative">
           <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-3xl blur-2xl"></div>
-          <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-8">
+          <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-8">    
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-xl flex items-center justify-center">
@@ -207,8 +207,8 @@ export default async function CustomerDashboard() {
                 <span className="text-green-400 font-bold text-sm">Online</span>
               </div>
             </div>
-            
-            <NearbyProsMap 
+
+            <NearbyProsMap
               userLatitude={userLatitude}
               userLongitude={userLongitude}
               radiusKm={10}
@@ -216,13 +216,11 @@ export default async function CustomerDashboard() {
           </div>
         </div>
 
-        {/* Estadísticas Avanzadas */}
-        <CustomerStats />
-
-        {/* Mis Solicitudes */}
+        {/* REMOVIDO: <CustomerStats /> */}
+        {/* Seccion de Solicitudes */}
         <div className="relative">
           <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-3xl blur-2xl"></div>
-          <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-8">
+          <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-8">    
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-black text-white flex items-center gap-3">
                 <FileText className="w-7 h-7 text-purple-500" />
@@ -251,7 +249,7 @@ export default async function CustomerDashboard() {
                 <p className="text-gray-400 text-lg mb-8 max-w-md mx-auto">
                   Crea tu primera solicitud y recibe cotizaciones de maestros verificados en minutos
                 </p>
-                <Link 
+                <Link
                   href="/dashboard/customer/requests/new"
                   className="group inline-block relative"
                 >
@@ -266,12 +264,17 @@ export default async function CustomerDashboard() {
             ) : (
               <div className="space-y-4">
                 {uniqueRequests.map((request) => {
-                  const detailsLink = request.jobId 
+                  if (!request) return null;
+                  
+                  const detailsLink = request.jobId
                     ? `/dashboard/job/${request.jobId}`
                     : `/dashboard/customer/requests/${request.id}`;
+                  
+                  const isOpen = !request.jobId;
+                  const status = isOpen ? 'open' : 'awarded';
 
                   return (
-                    <div 
+                    <div
                       key={request.id}
                       className="group relative"
                     >
@@ -308,16 +311,14 @@ export default async function CustomerDashboard() {
                           <div className="flex items-center gap-4">
                             <span
                               className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold shadow-lg ${
-                                request.status === 'open'
+                                status === 'open'
                                   ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                  : request.status === 'awarded'
-                                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                                  : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                                  : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                               }`}
                             >
-                              {request.status === 'open' && <Clock className="w-4 h-4 animate-pulse" />}
-                              {request.status === 'awarded' && <CheckCircle2 className="w-4 h-4" />}
-                              {request.status === 'open' ? 'Abierta' : request.status === 'awarded' ? 'Asignada' : request.status}
+                              {status === 'open' && <Clock className="w-4 h-4 animate-pulse" />}
+                              {status === 'awarded' && <CheckCircle2 className="w-4 h-4" />}
+                              {status === 'open' ? 'Abierta' : 'Asignada'}
                             </span>
 
                             <Link
@@ -327,7 +328,7 @@ export default async function CustomerDashboard() {
                               <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur opacity-75 group-hover/btn:opacity-100 transition"></div>
                               <div className="relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-full shadow-lg hover:scale-105 transition-all">
                                 Ver Detalles
-                                <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                                <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />   
                               </div>
                             </Link>
                           </div>

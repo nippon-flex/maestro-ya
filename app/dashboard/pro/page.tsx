@@ -5,10 +5,11 @@ import { eq, desc, sql } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { 
-  Clock, CheckCircle2, AlertCircle, 
-  MapPin, Zap, TrendingUp, Award, Crown, Rocket, Star
+  Clock, CheckCircle2, AlertCircle,
+  MapPin, Zap, TrendingUp, Award, Crown, Rocket, Star, Briefcase
 } from 'lucide-react';
 import { ProOnlineToggle } from '@/components/pro-online-toggle';
+import { SetLocationButton } from '@/components/set-location-button';
 import { ProStats } from '@/components/pro-stats';
 
 export default async function ProDashboard() {
@@ -104,7 +105,7 @@ export default async function ProDashboard() {
               <p className="text-xl text-gray-300 mb-8">
                 Tu cuenta ha sido suspendida. Por favor contacta a soporte.
               </p>
-              <a 
+              <a
                 href="mailto:soporte@maestro-ya.com"
                 className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 text-white font-bold rounded-full hover:scale-105 transition-all"
               >
@@ -146,8 +147,8 @@ export default async function ProDashboard() {
                 {pro.experienceYears} años de experiencia
               </p>
             </div>
-            
-            <Link 
+
+            <Link
               href="/dashboard/pro/opportunities"
               className="group relative"
             >
@@ -166,6 +167,21 @@ export default async function ProDashboard() {
         {/* Toggle Online/Offline */}
         <ProOnlineToggle initialStatus={pro.isOnline} />
 
+        {/* Ubicación - Mostrar botón si NO tiene ubicación, mensaje de éxito si SÍ tiene */}
+        {!pro.lat || !pro.lng ? (
+          <SetLocationButton />
+        ) : (
+          <div className="relative">
+            <div className="absolute -inset-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl blur-xl"></div>
+            <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-2xl p-6">
+              <div className="flex items-center gap-3 text-green-400">
+                <MapPin className="w-5 h-5" />
+                <span className="font-medium">Ubicación establecida correctamente</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Estadísticas Completas */}
         <ProStats />
 
@@ -173,7 +189,7 @@ export default async function ProDashboard() {
         {totalReviews > 0 && (
           <div className="relative">
             <div className="absolute -inset-1 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-3xl blur-xl"></div>
-            <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-8">
+            <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-8">  
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <Star className="w-8 h-8 text-yellow-400 fill-yellow-400" />
@@ -200,7 +216,7 @@ export default async function ProDashboard() {
                   </div>
                 </div>
                 <Link
-                  href={`/maestro/${pro.id}`}
+                  href={`/maestro/${pro.userId}`}
                   target="_blank"
                   className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-yellow-500/50 transition-all hover:scale-105"
                 >
@@ -268,7 +284,7 @@ export default async function ProDashboard() {
 
                   {totalReviews > 3 && (
                     <Link
-                      href={`/maestro/${pro.id}`}
+                      href={`/maestro/${pro.userId}`}
                       target="_blank"
                       className="block text-center py-3 text-cyan-400 hover:text-cyan-300 font-semibold transition-colors"
                     >
@@ -299,27 +315,24 @@ export default async function ProDashboard() {
             </div>
           </Link>
 
-          {/* Mis Trabajos */}
-          <div className="group relative cursor-pointer">
+          {/* Mis Trabajos - AHORA FUNCIONAL */}
+          <Link href="/dashboard/pro/jobs" className="group relative">
             <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl blur-xl opacity-25 group-hover:opacity-50 transition-opacity"></div>
             <div className="relative bg-gradient-to-br from-gray-900 to-black border border-purple-500/30 rounded-3xl p-8 hover:border-purple-500/60 transition-all hover:-translate-y-2">
               <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                <CheckCircle2 className="w-8 h-8 text-white" />
+                <Briefcase className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-2xl font-black text-white mb-2">
                 Mis Trabajos
               </h3>
               <p className="text-gray-400">
-                Ver trabajos activos y completados
+                Ver trabajos activos, completados y más
               </p>
-              <div className="mt-4 text-purple-400 text-sm font-bold">
-                Próximamente...
-              </div>
             </div>
-          </div>
+          </Link>
 
           {/* Mi Perfil */}
-          <Link href={`/maestro/${pro.id}`} target="_blank" className="group relative">
+          <Link href={`/maestro/${pro.userId}`} target="_blank" className="group relative">
             <div className="absolute -inset-1 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-3xl blur-xl opacity-25 group-hover:opacity-50 transition-opacity"></div>
             <div className="relative bg-gradient-to-br from-gray-900 to-black border border-yellow-500/30 rounded-3xl p-8 hover:border-yellow-500/60 transition-all hover:-translate-y-2">
               <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">

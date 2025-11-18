@@ -3,7 +3,7 @@ import { notifications } from '@/drizzle/schema';
 
 interface CreateNotificationParams {
   userId: number;
-  type: 'new_quote' | 'quote_accepted' | 'job_completed' | 'new_request';
+  type: 'new_quote' | 'quote_accepted' | 'job_completed' | 'new_request' | 'warranty_claim';
   title: string;
   message: string;
   link?: string; // URL a donde redirigir al hacer click
