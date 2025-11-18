@@ -21,7 +21,6 @@ export async function POST(req: Request) {
       lastName,
       bio,
       experienceYears,
-      coverageKm,
       categories,
       documents,
     } = body;
@@ -54,25 +53,22 @@ export async function POST(req: Request) {
 
     // Obtener IDs de categorías seleccionadas
     const selectedCategories = await db.query.serviceCategories.findMany({
-      where: inArray(serviceCategories.slug, categories),
+      where: inArray(serviceCategories.name, categories),
     });
 
     const categoryIds = selectedCategories.map((c) => c.id);
 
-    // Calcular fecha de fin de trial (30 días desde ahora)
-    const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + 30);
-
     // Crear perfil de maestro
+    const fullName = `${firstName} ${lastName}`.trim() || 'Maestro Profesional';
+    
     const [pro] = await db
       .insert(pros)
       .values({
         userId: user.id,
+        fullName,
         bio: bio || null,
-        experienceYears,
-        coverageKm,
+        experienceYears: Number(experienceYears) || 0,
         approvalStatus: "pending",
-        trialEndAt: trialEnd,
       })
       .returning();
 
@@ -80,22 +76,18 @@ export async function POST(req: Request) {
     const docPromises = [
       db.insert(proDocuments).values({
         proId: pro.id,
-        type: "cedula_front",
-        url: documents.cedulaFront,
-        status: "pending",
+        documentType: "cedula_front",
+        documentUrl: documents.cedulaFront,
       }),
       db.insert(proDocuments).values({
         proId: pro.id,
-        type: "cedula_back",
-        url: documents.cedulaBack,
-        status: "pending",
+        documentType: "cedula_back",
+        documentUrl: documents.cedulaBack,
       }),
       db.insert(proDocuments).values({
         proId: pro.id,
-        type: "antecedentes_penales",
-        url: documents.antecedentes,
-        status: "pending",
-        expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 días
+        documentType: "antecedentes_penales",
+        documentUrl: documents.antecedentes,
       }),
     ];
 
