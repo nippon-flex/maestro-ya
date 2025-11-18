@@ -28,9 +28,9 @@ export async function POST(req: NextRequest) {
     await db
       .update(pros)
       .set({
-        approvalStatus: 'approved',
-        approvedAt: new Date(),
-      })
+  approvalStatus: 'approved',
+  updatedAt: new Date(),  // ← CORRECTO
+})
       .where(eq(pros.id, proId));
 
     console.log(`✅ Maestro ${proId} aprobado por admin`);
