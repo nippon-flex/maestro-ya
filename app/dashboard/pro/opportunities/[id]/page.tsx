@@ -45,9 +45,9 @@ export default async function OpportunityDetailsPage({
     .select({
       id: serviceRequests.id,
       customerId: serviceRequests.customerId,
+      title: serviceRequests.title,
       description: serviceRequests.description,
-      photos: serviceRequests.photos,
-      status: serviceRequests.status,
+      photosUrls: serviceRequests.photosUrls,
       createdAt: serviceRequests.createdAt,
       categoryName: serviceCategories.name,
       addressStreet: addresses.street,
@@ -103,7 +103,7 @@ export default async function OpportunityDetailsPage({
             </div>
             <div>
               <h1 className="text-4xl md:text-5xl font-black text-white mb-2">
-                {request.categoryName}
+                {request.title || request.categoryName}
               </h1>
               <p className="text-cyan-200 text-lg flex items-center gap-2">
                 <Clock className="w-5 h-5" />
@@ -171,7 +171,7 @@ export default async function OpportunityDetailsPage({
             </div>
 
             {/* Fotos */}
-            {request.photos && request.photos.length > 0 && (
+            {request.photosUrls && request.photosUrls.length > 0 && (
               <div className="relative">
                 <div className="absolute -inset-1 bg-gradient-to-r from-pink-500/20 to-orange-500/20 rounded-3xl blur-xl"></div>
                 <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-8">
@@ -180,7 +180,7 @@ export default async function OpportunityDetailsPage({
                     Fotos del Cliente
                   </h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {request.photos.map((photo, i) => (
+                    {request.photosUrls.map((photo, i) => (
                       <div key={i} className="group relative aspect-square rounded-2xl overflow-hidden border border-white/10 hover:border-pink-500/50 transition-all">
                         <img
                           src={photo}
