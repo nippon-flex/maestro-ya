@@ -37,23 +37,16 @@ export default async function OpportunitiesPage() {
     .select({
       requestId: serviceRequests.id,
       description: serviceRequests.description,
-      status: serviceRequests.status,
       createdAt: serviceRequests.createdAt,
       categoryName: serviceCategories.name,
       addressStreet: addresses.street,
       addressCity: addresses.city,
-      targetStatus: requestTargets.status,
     })
     .from(requestTargets)
     .leftJoin(serviceRequests, eq(requestTargets.requestId, serviceRequests.id))
     .leftJoin(serviceCategories, eq(serviceRequests.categoryId, serviceCategories.id))
     .leftJoin(addresses, eq(serviceRequests.addressId, addresses.id))
-    .where(
-      and(
-        eq(requestTargets.proId, pro.id),
-        eq(serviceRequests.status, 'open')
-      )
-    );
+    .where(eq(requestTargets.proId, pro.id));
 
   // Obtener cotizaciones ya enviadas
   const sentQuotes = await db
@@ -214,7 +207,6 @@ export default async function OpportunitiesPage() {
                 {availableOpportunities.map((opp) => {
                   if (!opp.requestId || !opp.createdAt) return null;
 
-                  const isNew = opp.targetStatus === 'notified';
                   const timeAgo = Math.floor((Date.now() - new Date(opp.createdAt).getTime()) / 60000);
                   const isUrgent = timeAgo < 60;
 
@@ -238,11 +230,6 @@ export default async function OpportunitiesPage() {
                                   <h3 className="text-2xl font-black text-white">
                                     {opp.categoryName || 'Servicio'}
                                   </h3>
-                                  {isNew && (
-                                    <span className="bg-green-500/20 text-green-400 text-xs font-bold px-3 py-1 rounded-full border border-green-500/30 animate-pulse">
-                                      ✨ Nueva
-                                    </span>
-                                  )}
                                   {isUrgent && (
                                     <span className="bg-orange-500/20 text-orange-400 text-xs font-bold px-3 py-1 rounded-full border border-orange-500/30 animate-pulse">
                                       🔥 Urgente
