@@ -24,10 +24,10 @@ export default async function ReviewProPage({
     .select({
       id: pros.id,
       userId: pros.userId,
+      fullName: pros.fullName,
       email: users.email,
       phone: users.phone,
       experienceYears: pros.experienceYears,
-      coverageKm: pros.coverageKm,
       bio: pros.bio,
       approvalStatus: pros.approvalStatus,
       createdAt: users.createdAt,
@@ -58,9 +58,9 @@ export default async function ReviewProPage({
     .from(proDocuments)
     .where(eq(proDocuments.proId, proId));
 
-  const cedulaFront = documents.find((d) => d.type === 'cedula_front');
-  const cedulaBack = documents.find((d) => d.type === 'cedula_back');
-  const antecedentes = documents.find((d) => d.type === 'antecedentes_penales');
+  const cedulaFront = documents.find((d) => d.documentType === 'cedula_front');
+  const cedulaBack = documents.find((d) => d.documentType === 'cedula_back');
+  const antecedentes = documents.find((d) => d.documentType === 'antecedentes_penales');
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -88,6 +88,10 @@ export default async function ReviewProPage({
           </h2>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
+              <span className="text-gray-600">Nombre:</span>
+              <p className="font-medium text-gray-900">{pro.fullName}</p>
+            </div>
+            <div>
               <span className="text-gray-600">Email:</span>
               <p className="font-medium text-gray-900">{pro.email}</p>
             </div>
@@ -102,10 +106,6 @@ export default async function ReviewProPage({
               <p className="font-medium text-gray-900">
                 {pro.experienceYears} años
               </p>
-            </div>
-            <div>
-              <span className="text-gray-600">Cobertura:</span>
-              <p className="font-medium text-gray-900">{pro.coverageKm} km</p>
             </div>
             {pro.bio && (
               <div className="col-span-2">
@@ -142,7 +142,7 @@ export default async function ReviewProPage({
               </h3>
               {cedulaFront ? (
                 <img
-                  src={cedulaFront.url}
+                  src={cedulaFront.documentUrl}
                   alt="Cédula frontal"
                   className="w-full max-w-md border-2 border-gray-200 rounded-lg"
                 />
@@ -158,7 +158,7 @@ export default async function ReviewProPage({
               </h3>
               {cedulaBack ? (
                 <img
-                  src={cedulaBack.url}
+                  src={cedulaBack.documentUrl}
                   alt="Cédula reverso"
                   className="w-full max-w-md border-2 border-gray-200 rounded-lg"
                 />
@@ -174,7 +174,7 @@ export default async function ReviewProPage({
               </h3>
               {antecedentes ? (
                 <img
-                  src={antecedentes.url}
+                  src={antecedentes.documentUrl}
                   alt="Antecedentes penales"
                   className="w-full max-w-md border-2 border-gray-200 rounded-lg"
                 />
