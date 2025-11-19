@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
-import { warrantyClaims, users, jobs, pros, customers, notifications } from '@/drizzle/schema';
-import { eq, and } from 'drizzle-orm';
+import { warrantyClaims, users } from '@/drizzle/schema';
+import { eq } from 'drizzle-orm';
 import { createNotification } from '@/lib/notifications/create';
 
 export async function POST(req: NextRequest) {
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
       .where(eq(warrantyClaims.id, claimId));
 
     // Notificar al cliente
-    if (claim.customerId) {
+    if (claim.job?.customer?.user?.id) {
       let customerMessage = '';
       
       switch (status) {
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
 
       if (customerMessage) {
         await createNotification({
-          userId: claim.customerId,
+          userId: claim.job.customer.user.id,
           type: 'warranty_claim',
           title: 'Actualización de Reclamo',
           message: customerMessage,
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Notificar al maestro
-    if (claim.proId && (status === 'approved' || status === 'resolved')) {
+    if (claim.job?.pro?.user?.id && (status === 'approved' || status === 'resolved')) {
       let proMessage = '';
       
       if (status === 'approved') {
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
       }
 
       await createNotification({
-        userId: claim.proId,
+        userId: claim.job.pro.user.id,
         type: 'warranty_claim',
         title: 'Actualización de Reclamo',
         message: proMessage,

@@ -1,12 +1,12 @@
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
-import { jobs, quotes, serviceRequests, customers, pros, users, serviceCategories, addresses, reviews } from '@/drizzle/schema';
+import { jobs, quotes, serviceRequests, customers, pros, users, serviceCategories, addresses, reviews, warrantyClaims } from '@/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { 
+import {
   ArrowLeft, MapPin, DollarSign, Clock, CheckCircle2, Zap,
-  MessageCircle, Award, TrendingUp, Wrench, User, Shield, Mail, Phone, Star
+  MessageCircle, Award, TrendingUp, Wrench, User, Shield, Mail, Phone, Star, AlertCircle
 } from 'lucide-react';
 import StatusButtons from './status-buttons';
 import ReviewForm from './review-form';
@@ -88,13 +88,11 @@ export default async function JobPage({
 
   const priceUSD = ((job.quoteAmountCents || 0) / 100).toFixed(2);
 
-  // Verificar si es el pro
   let isPro = false;
   if (job.proUserId) {
     isPro = currentUser.id === job.proUserId;
   }
 
-  // Verificar si ya existe una reseña
   let hasReview = false;
   if (isCustomer && job.jobStatus === 'done') {
     const existingReview = await db
@@ -105,39 +103,75 @@ export default async function JobPage({
         eq(reviews.authorId, currentUser.id)
       ))
       .limit(1);
-    
+
     hasReview = existingReview.length > 0;
   }
 
+  // ✅ Buscar reclamo de garantía existente
+  let warrantyClaim = null;
+  if (isCustomer && job.jobStatus === 'done') {
+    const existingClaim = await db
+      .select()
+      .from(warrantyClaims)
+      .where(eq(warrantyClaims.jobId, jobId))
+      .limit(1);
+
+    warrantyClaim = existingClaim[0] || null;
+  }
+
   const statusConfig = {
-    pending: { 
-      label: 'Pendiente', 
+    pending: {
+      label: 'Pendiente',
       progress: 25,
       gradient: 'from-yellow-500 to-orange-500'
     },
-    in_progress: { 
-      label: 'En Progreso', 
+    in_progress: {
+      label: 'En Progreso',
       progress: 50,
       gradient: 'from-blue-500 to-cyan-500'
     },
-    done: { 
-      label: 'Completado', 
+    done: {
+      label: 'Completado',
       progress: 100,
       gradient: 'from-green-500 to-emerald-500'
     },
-    disputed: { 
-      label: 'En Disputa', 
+    disputed: {
+      label: 'En Disputa',
       progress: 75,
       gradient: 'from-red-500 to-pink-500'
     },
-    cancelled: { 
-      label: 'Cancelado', 
+    cancelled: {
+      label: 'Cancelado',
       progress: 0,
       gradient: 'from-gray-500 to-gray-600'
     },
   };
 
   const status = statusConfig[job.jobStatus] || statusConfig.pending;
+
+  const getClaimStatusBadge = (claimStatus: string) => {
+    const styles = {
+      open: 'bg-red-500/20 text-red-400 border-red-500/30',
+      reviewing: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+      approved: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+      rejected: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+      resolved: 'bg-green-500/20 text-green-400 border-green-500/30',
+    };
+
+    const labels = {
+      open: 'Abierto',
+      reviewing: 'En Revisión',
+      approved: 'Aprobado',
+      rejected: 'Rechazado',
+      resolved: 'Resuelto',
+    };
+
+    return (
+      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${styles[claimStatus as keyof typeof styles]}`}>
+        {labels[claimStatus as keyof typeof labels]}
+      </span>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-black">
@@ -150,7 +184,7 @@ export default async function JobPage({
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <Link 
+          <Link
             href={isCustomer ? '/dashboard/customer' : '/dashboard/pro'}
             className="group inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-xl border border-white/20 text-white font-bold rounded-full hover:bg-white/20 transition-all mb-6"
           >
@@ -180,7 +214,7 @@ export default async function JobPage({
 
           <div className="mt-8">
             <div className="bg-white/10 backdrop-blur-xl rounded-full h-3 overflow-hidden border border-white/20">
-              <div 
+              <div
                 className={`h-full bg-gradient-to-r ${status.gradient} transition-all duration-1000`}
                 style={{ width: `${status.progress}%` }}
               ></div>
@@ -417,7 +451,6 @@ export default async function JobPage({
               </div>
             )}
 
-            {/* Botones de Estado - SOLO PARA MAESTRO */}
             {isPro && (
               <div className="relative">
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-3xl blur-xl"></div>
@@ -425,16 +458,15 @@ export default async function JobPage({
                   <h3 className="text-xl font-black text-white mb-4">
                     🎯 Acciones
                   </h3>
-                  <StatusButtons 
-                    jobId={id} 
-                    currentStatus={job.jobStatus} 
-                    isPro={isPro} 
+                  <StatusButtons
+                    jobId={id}
+                    currentStatus={job.jobStatus}
+                    isPro={isPro}
                   />
                 </div>
               </div>
             )}
 
-            {/* Chat en Tiempo Real */}
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-pink-500/20 to-orange-500/20 rounded-3xl blur-xl"></div>
               <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-6">
@@ -442,7 +474,6 @@ export default async function JobPage({
               </div>
             </div>
 
-            {/* Formulario de Reseña - Solo para clientes en trabajos completados */}
             {isCustomer && job.jobStatus === 'done' && !hasReview && (
               <div className="relative" id="review">
                 <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-3xl blur-xl"></div>
@@ -451,15 +482,14 @@ export default async function JobPage({
                     <Star className="w-5 h-5 text-purple-500" />
                     Califica el Servicio
                   </h3>
-                  <ReviewForm 
-                    jobId={id} 
-                    proName={proUser?.email?.split('@')[0] || 'el maestro'} 
+                  <ReviewForm
+                    jobId={id}
+                    proName={proUser?.email?.split('@')[0] || 'el maestro'}
                   />
                 </div>
               </div>
             )}
 
-            {/* Mensaje si ya calificó */}
             {isCustomer && job.jobStatus === 'done' && hasReview && (
               <div className="relative">
                 <div className="absolute -inset-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-3xl blur-xl"></div>
@@ -475,29 +505,52 @@ export default async function JobPage({
               </div>
             )}
 
-            {/* Garantía con Botón de Reclamar - Solo para clientes en trabajos completados */}
             {isCustomer && job.jobStatus === 'done' && (
               <div className="relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-3xl blur-xl"></div>
-                <div className="relative bg-gradient-to-br from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-2xl p-6">
+                <div className="absolute -inset-1 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-3xl blur-xl"></div>
+                <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-6">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center flex-shrink-0">
                       <Shield className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <h3 className="font-black text-white mb-2">🛡️ Garantía 30 Días</h3>
-                      <p className="text-green-200 text-sm leading-relaxed mb-4">
+                      <p className="text-gray-300 text-sm leading-relaxed">
                         Este trabajo está protegido por nuestra garantía de satisfacción.
                       </p>
                     </div>
                   </div>
-                  
-                  <WarrantyClaimForm jobId={jobId} />
+
+                  {warrantyClaim ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-400">Estado del Reclamo:</span>
+                        {getClaimStatusBadge(warrantyClaim.status)}
+                      </div>
+                      
+                      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                        <div className="text-xs text-gray-400 mb-2">Tu Descripción:</div>
+                        <p className="text-white text-sm mb-3">{warrantyClaim.description}</p>
+                        
+                        {warrantyClaim.adminNotes && (
+                          <>
+                            <div className="text-xs text-gray-400 mb-2 pt-3 border-t border-white/10">Respuesta del Admin:</div>
+                            <p className="text-cyan-300 text-sm">{warrantyClaim.adminNotes}</p>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="text-xs text-gray-500 text-center">
+                        Reclamo presentado el {new Date(warrantyClaim.createdAt).toLocaleDateString('es-EC')}
+                      </div>
+                    </div>
+                  ) : (
+                    <WarrantyClaimForm jobId={jobId} />
+                  )}
                 </div>
               </div>
             )}
 
-            {/* Mensaje de Garantía para maestros */}
             {!isCustomer && (
               <div className="relative">
                 <div className="absolute -inset-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-3xl blur-xl"></div>
